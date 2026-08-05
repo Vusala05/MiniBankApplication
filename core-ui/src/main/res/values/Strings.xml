@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="error_card_not_found">Card not found</string>
+    <string name="error_insufficient_funds">Insufficient funds</string>
+    <string name="error_session_expired">Session expired, please log in again</string>
+    <string name="error_invalid_amount">Invalid amount</string>
+    <string name="error_card_not_active">Card is not active</string>
+    <string name="error_same_card">Transfer between the same card is not allowed</string>
+    <string name="error_currency_mismatch">Card currencies do not match</string>
+    <string name="error_invalid_profile_request">Invalid profile information</string>
+    <string name="unknown_error">An unknown error occurred</string>
+    <string name="network_error">Please check your internet connection and try again</string>
+    <string name="network_io_error">An error occurred while retrieving data </string>
+    <string name="network_unknown_error">An unknown error occurred</string>
+    <string name="successfully_transfer">Mission Successfully Completed!</string>
+
+
+
+
+
+</resources>
