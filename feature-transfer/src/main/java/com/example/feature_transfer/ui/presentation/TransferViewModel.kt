@@ -3,8 +3,9 @@ package com.example.feature_transfer.ui.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.core.domain.model.ResultWrapper
+import com.example.core.domain.useCase.HandleErrorUseCase
 import com.example.core_ui.R
-import com.example.core_ui.util.BusinessErrorTypeEnum
+import com.example.core_ui.viewModel.BaseViewModel
 import com.example.data.domain.useCases.GetCardUseCase
 import com.example.feature_transfer.domain.request.CalculateCommissionRequestDO
 import com.example.feature_transfer.domain.request.TransferRequestDO
@@ -27,98 +28,133 @@ import kotlinx.coroutines.launch
 class TransferViewModel @Inject constructor(
     val calculateCommissionUseCase: CalculateCommissionUseCase,
     val executeTransferUseCase: ExecuteTransferUseCase,
+    val handleErrorUseCase: HandleErrorUseCase,
     val getCardUseCase: GetCardUseCase
-) : ViewModel() {
+) : BaseViewModel<TransferContract.State, TransferContract.Effect>(TransferContract.State(), handleErrorUseCase) {
 
-    private val _state = MutableStateFlow(TransferContract.State())
-    val state  = _state.asStateFlow()
+    private val amountFlow = MutableStateFlow("")
 
-    private val _effect = MutableSharedFlow<TransferContract.Effect>()
-    val effect = _effect.asSharedFlow()
 
-    private val amountFlow  = MutableStateFlow("")
-    init {
+    fun handleIntent(intent: TransferContract.Intent) {
+        when (intent) {
+            is TransferContract.Intent.AmountChange -> {
+                updateState { it.copy(amount = intent.amount) }
+                amountFlow.value = intent.amount
+            }
 
-    }
-    fun handleIntent(intent: TransferContract.Intent){
-    when(intent){
-        is TransferContract.Intent.AmountChange -> {
-            _state.update { it.copy(amount = intent.amount) }
-            amountFlow.value = intent.amount
-        }
-        is TransferContract.Intent.SourceCardIdChange -> {
-            _state.update { it.copy(sourceCardId = intent.sourceCardId, commissionPreviewResponse = null, errorCode = null) }
-
-        }
-        is TransferContract.Intent.DestinationCardIdChange -> {
-            _state.update { it.copy(destinationCardId = intent.destinationCardId, commissionPreviewResponse = null, errorCode = null) }
-
-        }
-        is TransferContract.Intent.CurrencyChange -> {
-            _state.update { it.copy(currency = intent.currency) }
-
-        }
-        is TransferContract.Intent.OnSubmitClick -> {
-            executeTransfer()
-        }
-
-        is TransferContract.Intent.OnClickCard -> {
-            _state.update { it.copy(expandedBottomSheet = intent.isExpanded, cardSelectionType = intent.cardSelectionType) }
-            if(intent.isExpanded){
-                getCardList()
+            is TransferContract.Intent.SourceCardIdChange -> {
+                updateState {
+                    it.copy(
+                        sourceCardId = intent.sourceCardId,
+                        commissionPreviewResponse = null,
+                        errorCode = null
+                    )
+                }
 
             }
-        }
-        is TransferContract.Intent.CheckComission ->{
-            viewModelScope.launch {
-                amountFlow
-                    .debounce(300)
-                    .distinctUntilChanged()
-                    .collectLatest { amount ->
-                        if(amount.isNotBlank())
-                            calculateCommission(amount)
-                    }
-            }
-        }
 
-        is TransferContract.Intent.SelectCard -> {
-            val selectedCard = _state.value.cardList.find { it.id == intent.cardId }
-            _state.update {it.copy(currency = selectedCard?.currency ?: it.currency)}
-            _state.update { current ->
-                when (current.cardSelectionType) {
-                    CardSelectionType.SOURCE_CARD_ID -> current.copy(sourceCardId = intent.cardId)
-                    CardSelectionType.DESTINATION_CARD_ID -> current.copy(destinationCardId = intent.cardId)
-                    CardSelectionType.NONE -> current
+            is TransferContract.Intent.DestinationCardIdChange -> {
+                updateState{
+                    it.copy(
+                        destinationCardId = intent.destinationCardId,
+                        commissionPreviewResponse = null,
+                        errorCode = null
+                    )
+                }
+
+            }
+
+            is TransferContract.Intent.CurrencyChange -> {
+                updateState { it.copy(currency = intent.currency) }
+
+            }
+
+            is TransferContract.Intent.OnSubmitClick -> {
+                executeTransfer()
+            }
+
+            is TransferContract.Intent.OnClickCard -> {
+                updateState {
+                    it.copy(
+                        expandedBottomSheet = intent.isExpanded,
+                        cardSelectionType = intent.cardSelectionType
+                    )
+                }
+                if (intent.isExpanded) {
+                    getCardList()
+
                 }
             }
 
+            is TransferContract.Intent.CheckComission -> {
+                viewModelScope.launch {
+                    amountFlow
+                        .debounce(300)
+                        .distinctUntilChanged()
+                        .collectLatest { amount ->
+                            if (amount.isNotBlank())
+                                calculateCommission(amount)
+                        }
+                }
+            }
+
+            is TransferContract.Intent.SelectCard -> {
+                val currentState = currentState()
+                val selectedCard = currentState.cardList.find { it.id == intent.cardId }
+                updateState { it.copy(currency = selectedCard?.currency ?: it.currency) }
+                updateState { current ->
+                    when (current.cardSelectionType) {
+                        CardSelectionType.SOURCE_CARD_ID -> current.copy(sourceCardId = intent.cardId)
+                        CardSelectionType.DESTINATION_CARD_ID -> current.copy(destinationCardId = intent.cardId)
+                        CardSelectionType.NONE -> current
+                    }
+                }
+
+            }
+
+
         }
 
-
-
     }
 
-    }
-    private fun calculateCommission(amount : String) {
-        _state.update { it.copy(commissionCheckingIsSuccessful = false, checkingAvailabilityOfTransformation = true, errorCode = null) }
+    private fun calculateCommission(amount: String) {
+        updateState {
+            it.copy(
+                commissionCheckingIsSuccessful = false,
+                checkingAvailabilityOfTransformation = true,
+                errorCode = null
+            )
+        }
         viewModelScope.launch {
-            val currentState = _state.value
+            val currentState = currentState()
             when (val res = calculateCommissionUseCase(
                 CalculateCommissionRequestDO(
-                 sourceCardId = currentState.sourceCardId,
+                    sourceCardId = currentState.sourceCardId,
                     destinationCardId = currentState.destinationCardId,
                     amount = amount,
                     currency = currentState.currency
                 )
-            )){
+            )) {
                 is ResultWrapper.Success -> {
-                    _state.update{ it.copy(commissionCheckingIsSuccessful = true,checkingAvailabilityOfTransformation = false, commissionPreviewResponse = res.data)}
+                   updateState {
+                        it.copy(
+                            commissionCheckingIsSuccessful = true,
+                            checkingAvailabilityOfTransformation = false,
+                            commissionPreviewResponse = res.data
+                        )
+                    }
                 }
+
                 is ResultWrapper.Error -> {
-                    _state.update { it.copy(commissionCheckingIsSuccessful = false, checkingAvailabilityOfTransformation = false, errorCode = res.code) }
-                    val enumType = BusinessErrorTypeEnum.getBusinessError(res.code)
-                    val message = enumType.errorMessage
-                    _effect.emit(TransferContract.Effect.ShowMessage(message))
+                    val error = handleErrorUseCase(res.error)
+                    updateState {
+                        it.copy(
+                            commissionCheckingIsSuccessful = false,
+                            checkingAvailabilityOfTransformation = false,
+                            errorCode = error.errorCode
+                        )
+                    }
+                    handleError(res.error)
 
                 }
             }
@@ -126,49 +162,60 @@ class TransferViewModel @Inject constructor(
         }
     }
 
-    private fun executeTransfer(){
-       viewModelScope.launch {
-           val currentState = _state.value
-           _state.update { it.copy(isLoading = true) }
-           when(val res = executeTransferUseCase(
-               TransferRequestDO(
-                   sourceCardId = currentState.sourceCardId,
-                   destinationCardId = currentState.destinationCardId,
-                   amount = currentState.amount,
-                   currency = currentState.currency
-               )
-           )){
-               is ResultWrapper.Success -> {
-                   _state.update { it.copy(isLoading = false, transferResult = res.data) }
-                   _effect.emit(TransferContract.Effect.ShowMessage(R.string.successfully_transfer))
+    private fun executeTransfer() {
+        viewModelScope.launch {
+            val currentState = currentState()
+            updateState { it.copy(isLoading = true) }
+            when (val res = executeTransferUseCase(
+                TransferRequestDO(
+                    sourceCardId = currentState.sourceCardId,
+                    destinationCardId = currentState.destinationCardId,
+                    amount = currentState.amount,
+                    currency = currentState.currency
+                )
+            )) {
+                is ResultWrapper.Success -> {
+                    updateState { it.copy(isLoading = false, transferResult = res.data) }
+                   // showMessage(R.string.successfully_transfer)
 
-               }
-               is ResultWrapper.Error -> {
-                   _state.update { it.copy(isLoading = false) }
-                   val enumType = BusinessErrorTypeEnum.getBusinessError(res.code)
-                   val message = enumType.errorMessage
-                   _effect.emit(TransferContract.Effect.ShowMessage(message))
-               }
-           }
-       }
+                }
+
+                is ResultWrapper.Error -> {
+                    updateState { it.copy(isLoading = false) }
+                    handleError(res.error)
+
+                }
+            }
+        }
     }
 
     private fun getCardList() {
         viewModelScope.launch {
             when (val res = getCardUseCase()) {
                 is ResultWrapper.Success -> {
-                 _state.update { it.copy(cardList = res.data)}
+                    updateState { it.copy(cardList = res.data) }
                 }
 
                 is ResultWrapper.Error -> {
-                    _state.update { it.copy(checkingAvailabilityOfTransformation = false, errorCode = res.code) }
-                    val enumType = BusinessErrorTypeEnum.getBusinessError(res.code)
-                    val message = enumType.errorMessage
-                    _effect.emit(TransferContract.Effect.ShowMessage(message))
+                    val error = handleErrorUseCase(res.error)
+
+                    updateState {
+                        it.copy(
+                            checkingAvailabilityOfTransformation = false,
+                            errorCode = error.errorCode
+                        )
+                    }
+                    handleError(res.error)
                 }
             }
+
         }
 
     }
 
+    override fun showMessage(message: Int) {
+        viewModelScope.launch {
+            sendEffect(TransferContract.Effect.ShowMessage(message))
+        }
+    }
 }

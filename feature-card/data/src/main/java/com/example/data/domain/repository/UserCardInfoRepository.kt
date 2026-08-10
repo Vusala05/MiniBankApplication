@@ -6,7 +6,7 @@ import com.example.data.domain.response.BalanceDO
 import com.example.data.domain.response.CardDO
 
 interface UserCardInfoRepository {
-    suspend fun getCards () : ResultWrapper<List<CardDO>>
+    suspend fun getCards (userForceToRefresh : Boolean) : ResultWrapper<List<CardDO>>
 
     suspend fun getBalance (balancesRequestDO: BalancesRequestDO) : ResultWrapper<List<BalanceDO>>
 

@@ -3,10 +3,9 @@ package com.example.feature_auth.ui.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.core.domain.model.ErrorModelDo
 import com.example.core.domain.model.ResultWrapper
-import com.example.core_ui.util.BusinessErrorTypeEnum
-import com.example.core_ui.util.SystemErrorTypeEnum
+import com.example.core.domain.useCase.HandleErrorUseCase
+import com.example.core_ui.viewModel.BaseViewModel
 import com.example.feature_auth.data.dataSource.AuthLocalDataSource
 import com.example.feature_auth.domain.request.UpdateUserProfileRequestDO
 import com.example.feature_auth.domain.useCases.GetUserProfileUseCase
@@ -22,44 +21,34 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-sealed interface HandleErrorResult {
-    data object Skip : HandleErrorResult
-    data class Display (val error: ErrorModelDo) : HandleErrorResult
-}
-
+//TODO -> BaseViewModel, BaseUiState ve BaseUiEffect(erroru handle et)
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     val updateUserProfileUseCase: UpdateUserProfileUseCase,
     val getProfileUseCase: GetUserProfileUseCase,
     val authLocalDataSource: AuthLocalDataSource,
+    val handleErrorUseCase: HandleErrorUseCase,
     val navigator: Navigator
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(AuthContract.State())
-    val state  = _state.asStateFlow()
-
-    private val _effect = MutableSharedFlow<AuthContract.Effect>()
-    val effect = _effect.asSharedFlow()
+) : BaseViewModel<AuthContract.State, AuthContract.Effect>(AuthContract.State(), handleErrorUseCase) {
 
     init {
         getUserProfile()
-        Log.e("inside init", "inside init")
     }
 
 
     fun handleIntent(intent: AuthContract.Intent){
         when(intent){
             is AuthContract.Intent.SetName -> {
-                _state.update { it.copy(name = intent.name) }
+                updateState { it.copy(name = intent.name) }
             }
             is AuthContract.Intent.SetSurname -> {
-                _state.update { it.copy(surname = intent.surname) }
+                updateState { it.copy(surname = intent.surname) }
             }
             is AuthContract.Intent.SetEmail -> {
-                _state.update { it.copy(email = intent.email) }
+               updateState { it.copy(email = intent.email) }
             }
             is AuthContract.Intent.SetPhone -> {
-                _state.update { it.copy(phone = intent.phone) }
+                updateState { it.copy(phone = intent.phone) }
             }
             is AuthContract.Intent.OnSaveClick -> {
                 saveUserData()
@@ -72,7 +61,7 @@ class AuthViewModel @Inject constructor(
     }
 
     private fun getUserProfile(){
-        _state.update {it.copy(loading = true)}
+        updateState{it.copy(loading = true)}
         viewModelScope.launch {
             when(val res = getProfileUseCase()){
                 is ResultWrapper.Success -> {
@@ -80,9 +69,7 @@ class AuthViewModel @Inject constructor(
                     authLocalDataSource.saveSurname(res.data.lastName)
                     authLocalDataSource.savePhone(res.data.phoneNumber)
                     authLocalDataSource.saveEmail(res.data.email)
-                    Log.e("inside init", "inside init success")
-
-                    _state.update { it.copy(
+                    updateState { it.copy(
                         loading = false ,
                         name = res.data.firstName,
                         surname = res.data.lastName,
@@ -92,12 +79,8 @@ class AuthViewModel @Inject constructor(
                     ) }
                 }
                 is ResultWrapper.Error -> {
-                    Log.e("inside init", "inside init error")
-                    Log.e("inside init", "${res.code} ${res.message} ${res.exception?.message} ")
-                   _state.update { it.copy(loading = false) }
-                    val enumType = BusinessErrorTypeEnum.getBusinessError(res.code)
-                    val message = enumType.errorMessage
-                    _effect.emit(AuthContract.Effect.ShowErrorMessage(message))
+                  updateState { it.copy(loading = false) }
+                    handleError(res.error)
 
                 }
             }
@@ -106,10 +89,10 @@ class AuthViewModel @Inject constructor(
     }
 
    private fun saveUserData(){
-            val currentState = _state.value
+             val currentState = currentState()
             if(!currentState.hasUnsavedChanges) return
             viewModelScope.launch {
-                _state.update { it.copy(loading = true) }
+                updateState { it.copy(loading = true) }
                 val res = updateUserProfileUseCase(
                     UpdateUserProfileRequestDO(
                         firstName = currentState.name,
@@ -120,17 +103,12 @@ class AuthViewModel @Inject constructor(
                 )
                 when(res){
                     is ResultWrapper.Success -> {
-                        _state.update { it.copy(loading = false) }
-                        _state.update { it.copy(userProfile = res.data) }
+                        updateState { it.copy(loading = false) }
+                        updateState { it.copy(userProfile = res.data) }
                     }
                     is ResultWrapper.Error -> {
-                        _state.update { it.copy(loading = false) }
-                        if (SystemErrorTypeEnum.isSystemError(res.code)) return@launch
-
-                        val enumType = BusinessErrorTypeEnum.getBusinessError(res.code)
-                        val message = enumType.errorMessage
-                        _effect.emit(AuthContract.Effect.ShowErrorMessage(message))
-
+                        updateState { it.copy(loading = false) }
+                        handleError(error = res.error)
                     }
                 }
 
@@ -139,5 +117,11 @@ class AuthViewModel @Inject constructor(
 
     private fun navigateToCardScreen(route : Route){
      navigator.navigate(route)
+    }
+
+    override fun showMessage(message: Int) {
+        viewModelScope.launch {
+            sendEffect(AuthContract.Effect.ShowErrorMessage(message))
+        }
     }
 }

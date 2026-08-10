@@ -3,7 +3,8 @@ package com.example.feature_transaction.ui.presentation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.core.domain.model.ResultWrapper
-import com.example.core_ui.util.BusinessErrorTypeEnum
+import com.example.core.domain.useCase.HandleErrorUseCase
+import com.example.core_ui.viewModel.BaseViewModel
 import com.example.feature_transaction.domain.useCases.GetTransactionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -16,14 +17,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class TransactionViewModel @Inject constructor(
-    val getTransactionUseCase: GetTransactionUseCase
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(TransactionContract.State())
-    val state  = _state.asStateFlow()
-
-    private val _effect = MutableSharedFlow<TransactionContract.Effect>()
-    val effect = _effect.asSharedFlow()
+    val getTransactionUseCase: GetTransactionUseCase,
+    val handleErrorUseCase: HandleErrorUseCase
+) : BaseViewModel<TransactionContract.State, TransactionContract.Effect>(TransactionContract.State(), handleErrorUseCase) {
 
     init {
       loadTransactions()
@@ -35,20 +31,24 @@ class TransactionViewModel @Inject constructor(
 
     private fun loadTransactions(){
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true) }
+            updateState { it.copy(isLoading = true) }
             when(val res = getTransactionUseCase()){
                 is ResultWrapper.Success -> {
-                      _state.update { it.copy(isLoading = false, transactionList = res.data) }
+                     updateState{ it.copy(isLoading = false, transactionList = res.data) }
                 }
                 is ResultWrapper.Error -> {
-                    _state.update { it.copy(isLoading = false) }
-                    val enumType = BusinessErrorTypeEnum.getBusinessError(res.code)
-                    val message = enumType.errorMessage
-                    _effect.emit(TransactionContract.Effect.ShowErrorMessage(message))
+                    updateState { it.copy(isLoading = false) }
+                    handleError(res.error)
                 }
             }
         }
 
+    }
+
+    override fun showMessage(message: Int) {
+       viewModelScope.launch {
+           sendEffect(TransactionContract.Effect.ShowErrorMessage(message))
+       }
     }
 
 }

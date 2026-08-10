@@ -2,6 +2,7 @@ package com.example.ui.presentation
 
 import com.example.data.domain.response.CardDO
 import com.example.data.domain.response.CardWithBalanceDO
+import com.example.data.domain.useCases.CardWithBalanceUiModel
 import com.example.navigation.Route
 
 object CardInfoContract {
@@ -21,7 +22,7 @@ object CardInfoContract {
         val isBalanceSectionLoading : Boolean = false,
         val cardIndex : Int = 0,
         val cardList : List<CardDO> = emptyList(),
-        val cardWithBalanceList : List<CardWithBalanceDO> = emptyList()
+        val cardWithBalanceList : List<CardWithBalanceUiModel> = emptyList()
 
     )
 }

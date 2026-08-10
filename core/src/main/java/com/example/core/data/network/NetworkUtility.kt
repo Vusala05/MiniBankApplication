@@ -2,6 +2,7 @@ package com.example.core.data.network
 
 import com.example.core.data.model.BaseResponse
 import com.example.core.domain.feature.GlobalNetwork
+import com.example.core.domain.model.AppError
 import com.example.core.domain.model.ErrorModelDo
 import com.example.core.domain.model.ResultWrapper
 import kotlinx.serialization.json.Json
@@ -12,6 +13,7 @@ import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import javax.net.ssl.SSLHandshakeException
 
+//TODO -> 5xx atarsa o zaman server exceptionlardir, o duzgun handle olunmalidir
 inline fun <reified T> apiCallingHandler(
     globalNetwork: GlobalNetwork,
     apiCall : () -> Response<BaseResponse<T>>
@@ -39,15 +41,17 @@ inline fun <reified T> apiCallingHandler(
              }
              globalNetwork.handleError(
                  error = ResultWrapper.Error(
-                     exception = exception,
-                     message = errorModel.message,
-                     code = errorModel.code
+                     error = AppError.BusinessError(
+                        errorModel = errorModel,
+                         exception = exception
+                     )
                  )
              )
              ResultWrapper.Error(
-                 exception = exception,
-                 message = errorModel.message,
-                 code = errorModel.code
+                error = AppError.BusinessError(
+                    errorModel = errorModel,
+                    exception = exception
+                )
              )
 
          }
@@ -59,9 +63,13 @@ inline fun <reified T> apiCallingHandler(
                  is SocketTimeoutException,
                  is SocketException -> {
                      val error = ResultWrapper.Error(
-                         message = throwable.message,
-                         code = Integer.MAX_VALUE-1,
-                         exception = throwable
+                        error = AppError.SystemError(
+                            errorModel = ErrorModelDo(
+                                message = throwable.message,
+                                code = Integer.MAX_VALUE - 1
+                            ),
+                            exception = throwable
+                        )
 
                      )
                      globalNetwork.handleError(
@@ -72,21 +80,30 @@ inline fun <reified T> apiCallingHandler(
 
                  is IOException -> {
                      val error = ResultWrapper.Error(
-                         message = throwable.message,
-                         code = Integer.MAX_VALUE - 2,
-                         exception = throwable
+                         error = AppError.SystemError(
+                             errorModel = ErrorModelDo(
+                                 message = throwable.message,
+                                 code = Integer.MAX_VALUE - 2
+                             ),
+                             exception = throwable
+                         )
+
                      )
                      globalNetwork.handleError(
                          error
                      )
                      return error
                  }
-
                  else -> {
                      val error = ResultWrapper.Error(
-                         exception = Exception(throwable.message, throwable),
-                         message = SOMETHING_WENT_WRONG,
-                         code = Integer.MAX_VALUE - 3
+                         error = AppError.SystemError(
+                             errorModel = ErrorModelDo(
+                                 message = SOMETHING_WENT_WRONG,
+                                 code = Integer.MAX_VALUE
+                             ),
+                             exception = Exception(throwable.message, throwable)
+                         )
+
                      )
                      globalNetwork.handleError(
                          error

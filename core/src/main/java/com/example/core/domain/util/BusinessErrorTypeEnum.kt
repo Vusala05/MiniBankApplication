@@ -1,11 +1,11 @@
-package com.example.core_ui.util
+package com.example.core.domain.util
 
-import com.example.core_ui.R
+import com.example.core.R
 
 enum class BusinessErrorTypeEnum(
-   val errorCode : Int,
-   val errorMessage : Int,
-) {
+   override val errorCode : Int,
+   override val errorMessage : Int,
+) : ErrorType {
     CARD_NOT_FOUND(
         errorCode = 1001,
         errorMessage = R.string.error_card_not_found
@@ -43,7 +43,7 @@ enum class BusinessErrorTypeEnum(
         errorMessage = R.string.error_invalid_profile_request
     ),
     UNKNOWN_ERROR(
-        errorCode = Integer.MAX_VALUE,
+        errorCode = Integer.MAX_VALUE - 3 ,
         errorMessage = R.string.unknown_error
     );
 

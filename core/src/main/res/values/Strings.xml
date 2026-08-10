@@ -8,10 +8,11 @@
     <string name="error_same_card">Transfer between the same card is not allowed</string>
     <string name="error_currency_mismatch">Card currencies do not match</string>
     <string name="error_invalid_profile_request">Invalid profile information</string>
-    <string name="unknown_error">An unknown error occurred</string>
+    <string name="unknown_error">An unknown error occurred on the server</string>
     <string name="network_error">Please check your internet connection and try again</string>
     <string name="network_io_error">An error occurred while retrieving data </string>
-    <string name="network_unknown_error">An unknown error occurred</string>
+    <string name="network_unknown_error">An unknown error occurred on the system</string>
+    <string name="mapping_error">Internal Mapping Error Occur</string>
     <string name="successfully_transfer">Mission Successfully Completed!</string>
 
 

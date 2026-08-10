@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
 import com.example.core.data.network.ApiErrorHandler
+import com.example.core.domain.useCase.HandleErrorUseCase
 import com.example.feature_auth.ui.presentation.AuthScreen
 import com.example.minibankapp.navigator.MainRoutes
 import com.example.minibankapp.navigator.RetainedNavigator
@@ -24,7 +25,8 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var apiErrorHandler : ApiErrorHandler
-
+    @Inject
+    lateinit var handleErrorUseCase: HandleErrorUseCase
     @Inject
     lateinit var retainedNavigator: RetainedNavigator
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,7 +36,8 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
             MiniBankAppTheme {
                 GlobalErrorObserver(
-                    apiErrorHandler = apiErrorHandler
+                    apiErrorHandler = apiErrorHandler,
+                    handleErrorUseCase = handleErrorUseCase
                 )
                 MainRoutes(
                     navController = navController,

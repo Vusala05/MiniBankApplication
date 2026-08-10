@@ -56,5 +56,4 @@ dependencies {
     ksp(libs.hilt.android.compiler)
     implementation(libs.logging.interceptor)
 
-
 }

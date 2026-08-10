@@ -21,11 +21,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.domain.response.BalanceDO
+import com.example.data.domain.useCases.CardBalanceUiState
 
 @Composable
 fun BalanceSection(
-    balanceDO: BalanceDO?,
-    isLoading: Boolean,
+    balanceUiState: CardBalanceUiState,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -42,51 +42,41 @@ fun BalanceSection(
             color = Color.Gray
         )
 
-        if (isLoading) {
-            Box(
-                modifier = Modifier
-                    .width(100.dp)
-                    .height(24.dp),
-                contentAlignment = Alignment.Center
-            ){
-                CircularProgressIndicator(
-                    modifier = Modifier.size(30.dp),
-                    color = Color.Black,
-                    strokeWidth = 3.dp
+        when (balanceUiState) {
+            is CardBalanceUiState.Idle,
+            is CardBalanceUiState.Loading -> {
+                Box(
+                    modifier = Modifier
+                        .width(100.dp)
+                        .height(24.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(30.dp),
+                        color = Color.Black,
+                        strokeWidth = 3.dp
+                    )
+                }
+            }
+
+            is CardBalanceUiState.Success -> {
+                Text(
+                    text = "${balanceUiState.data.amount} ${balanceUiState.data.currency}",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
                 )
             }
-        } else if(balanceDO!=null) {
-            Text(
-                text = "${balanceDO.amount} ${balanceDO.currency}",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+
+            is CardBalanceUiState.Error -> {
+                Text(
+                    text = "Can not be loading",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
         }
     }
 }
-@Preview(showBackground = true, name = "Balance Loaded")
-@Composable
-fun BalanceSectionPreview() {
-    Surface(modifier = Modifier.padding(16.dp)) {
-        BalanceSection(
-            balanceDO = BalanceDO(
-                maskedPan = "4111ABCD1234",
-                amount = "150.50",
-                currency = "AZN"
-            ),
-            isLoading = false
-        )
-    }
-}
 
-@Preview(showBackground = true, name = "Balance Loading")
-@Composable
-fun BalanceSectionLoadingPreview() {
-    Surface(modifier = Modifier.padding(16.dp)) {
-        BalanceSection(
-            balanceDO = null,
-            isLoading = true
-        )
-    }
-}

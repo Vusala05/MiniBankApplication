@@ -19,7 +19,7 @@ class ApiErrorHandler @Inject constructor(
     val effect  = _effect.asSharedFlow()
     override  fun handleError(error: ResultWrapper.Error) {
         coroutineScope.launch {
-            if(error.exception !is CancellationException)
+            if(error.error !is CancellationException)
          _effect.emit(error)
 
         }

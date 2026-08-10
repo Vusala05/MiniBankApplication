@@ -63,8 +63,7 @@ fun CardInfoScreen(
                     isLoading = state.isCardSectionLoading
                 )
                 BalanceSection(
-                    balanceDO = item.balanceDO,
-                    isLoading = state.isBalanceSectionLoading
+                   balanceUiState = item.balanceUiState
                 )
 
             }

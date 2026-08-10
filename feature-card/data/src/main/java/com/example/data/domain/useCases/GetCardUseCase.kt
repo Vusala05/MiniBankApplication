@@ -9,6 +9,6 @@ class GetCardUseCase @Inject constructor(
     val cardInfoRepository: UserCardInfoRepository
 ) {
     suspend operator fun invoke() : ResultWrapper<List<CardDO>>{
-        return cardInfoRepository.getCards()
+        return cardInfoRepository.getCards(userForceToRefresh = false)
     }
 }
