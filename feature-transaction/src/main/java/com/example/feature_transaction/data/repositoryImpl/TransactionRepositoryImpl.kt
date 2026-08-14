@@ -13,9 +13,9 @@ class TransactionRepositoryImpl @Inject constructor(
     val globalNetwork: GlobalNetwork,
     val dataSource: DataSource
 ) : TransactionRepository {
-    override suspend fun getTransaction(): ResultWrapper<List<TransactionDO>> {
+    override suspend fun getTransaction(offset : Int, userPullRequest : Boolean): ResultWrapper<List<TransactionDO>> {
         return handleResultWrapper(result = apiCallingHandler(globalNetwork = globalNetwork){
-            dataSource.getTransactions()
+            dataSource.getTransactions(offset = offset)
         }){ result ->
             result?.map{it.toDomain()} ?: emptyList()
         }

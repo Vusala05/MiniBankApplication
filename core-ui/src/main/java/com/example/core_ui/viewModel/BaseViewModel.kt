@@ -11,7 +11,8 @@ import kotlinx.coroutines.flow.update
 
 abstract class BaseViewModel<S, E>(
     initialState: S,
-    private val handleErrorUseCase: HandleErrorUseCase
+    private val handleErrorUseCase: HandleErrorUseCase,
+
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(initialState)
@@ -29,7 +30,13 @@ abstract class BaseViewModel<S, E>(
     protected suspend fun sendEffect(effect: E) {
         _effect.emit(effect)
     }
+   /* protected fun withLoading(block : suspend () -> Unit ){
+        try {
 
+        } finally {
+
+        }
+    }*/
     protected fun handleError(error: AppError) {
         when (error) {
             is AppError.SystemError -> {

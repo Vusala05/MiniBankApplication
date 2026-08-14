@@ -56,4 +56,7 @@ dependencies {
     ksp(libs.hilt.android.compiler)
     implementation(libs.logging.interceptor)
 
+    //Pagination
+    implementation(libs.androidx.paging.compose)
+
 }

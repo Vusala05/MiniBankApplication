@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetTransactionUseCase @Inject constructor(
     val transactionRepository: TransactionRepository
 ) {
-    suspend operator fun invoke() : ResultWrapper<List<TransactionDO>>{
-        return transactionRepository.getTransaction()
+    suspend operator fun invoke(offset : Int, userPullRequest : Boolean) : ResultWrapper<List<TransactionDO>>{
+        return transactionRepository.getTransaction(offset = offset, userPullRequest =  userPullRequest)
     }
 }
