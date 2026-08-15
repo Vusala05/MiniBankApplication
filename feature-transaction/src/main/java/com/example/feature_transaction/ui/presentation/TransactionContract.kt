@@ -16,9 +16,10 @@ object TransactionContract {
     data class State(
         val isLoading : Boolean = false,
         val transactionList : List<TransactionDO> = emptyList(),
-        val isAppendLoading : Boolean = false,
+        val isPageLoading : Boolean = false,
         val paginationIsFinished : Boolean = false,
-        val transactionWithDay  : Map<String, List<TransactionDO>> = emptyMap()
+        val transactionWithDay  : Map<String, List<TransactionDO>> = emptyMap(),
+        val groupedTransactionList : List <GroupedTransactionList> = emptyList()
     )
     const val MAX_PAGE = 20
 

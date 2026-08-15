@@ -84,7 +84,7 @@ fun TransactionScreen(
                     )
                 }
 
-                state.transactionWithDay.isEmpty() -> {
+                state.groupedTransactionList.isEmpty() -> {
                     Text(
                         text = "No transactions found",
                         fontSize = 14.sp,
@@ -99,7 +99,7 @@ fun TransactionScreen(
                         state = listState,
                         verticalArrangement = Arrangement.spacedBy(5.dp)
                     ) {
-                        state.transactionWithDay.forEach { (day, transactions) ->
+                        state.groupedTransactionList.forEach { (day, transactions) ->
                             stickyHeader {
                                 Surface(color = MaterialTheme.colorScheme.background) {
                                     Text(
@@ -117,7 +117,7 @@ fun TransactionScreen(
                             }
                         }
 
-                        if (!state.paginationIsFinished) {
+                        if (state.isPageLoading && !state.groupedTransactionList.isEmpty() && !state.paginationIsFinished) {
                             item {
                                 Box(
                                     modifier = Modifier
