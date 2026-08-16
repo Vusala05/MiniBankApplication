@@ -56,6 +56,11 @@ dependencies {
     ksp(libs.hilt.android.compiler)
     implementation(libs.logging.interceptor)
 
+    //Room Database
+    implementation(libs.androidx.room3.runtime)
+    ksp(libs.androidx.room3.compiler)
+
+
     //Pagination
     implementation(libs.androidx.paging.compose)
 

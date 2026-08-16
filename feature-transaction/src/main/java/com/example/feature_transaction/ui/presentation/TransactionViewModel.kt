@@ -63,6 +63,9 @@ class TransactionViewModel @Inject constructor(
          is TransactionContract.Intent.ReloadPage -> {
              reloadTransactions()
          }
+         is TransactionContract.Intent.PullRequestRequired -> {
+             updateState { it.copy(pullRequest = it.pullRequest) }
+         }
      }
     }
 

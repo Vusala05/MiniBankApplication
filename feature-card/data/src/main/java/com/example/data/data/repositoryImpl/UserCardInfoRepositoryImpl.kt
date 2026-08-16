@@ -1,6 +1,9 @@
 package com.example.feature_card.data.repositoryImpl
 
+import com.example.core.data.module.CacheModule
 import com.example.core.data.network.apiCallingHandler
+import com.example.core.data.util.getAndConvertToModel
+import com.example.core.data.util.writeAndConvertToJson
 import com.example.core.domain.feature.CacheManager
 import com.example.core.domain.feature.GlobalNetwork
 import com.example.core.domain.model.ResultWrapper
@@ -15,22 +18,19 @@ import com.example.feature_card.data.response.Balance.Companion.toDomain
 import com.example.feature_card.data.response.Card.Companion.toDomain
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import java.util.concurrent.ConcurrentHashMap
-
 import javax.inject.Inject
-import javax.inject.Qualifier
 import kotlin.time.Duration.Companion.minutes
 class UserCardInfoRepositoryImpl @Inject constructor(
-    val dataSource: DataSource,
-    val globalNetwork: GlobalNetwork,
-    val cacheManager: CacheManager
+    private val dataSource: DataSource,
+    private val globalNetwork: GlobalNetwork,
+   @CacheModule.InMemoryCacheManager private val cacheManager: CacheManager
 ) : UserCardInfoRepository {
     val mutex = Mutex()
 
 
     override suspend fun getCards(userForceToRefresh : Boolean): ResultWrapper<List<CardDO>> {
 
-        val cachedCardList = cacheManager.getData(CARD_CASH_KEY, userForceToRefresh) as? List<CardDO>
+        val cachedCardList = cacheManager.getAndConvertToModel<List<CardDO>>(CARD_CACHE_KEY, userForceToRefresh)
 
 
         if(cachedCardList!=null){
@@ -40,7 +40,7 @@ class UserCardInfoRepositoryImpl @Inject constructor(
             return handleResultWrapper(result = apiCallingHandler(globalNetwork = globalNetwork){
                 dataSource.getCards()
             }){ result ->
-                result?.map { it.toDomain() }.orEmpty().also { cacheManager.writeData(CARD_CASH_KEY, it,2.minutes.inWholeMilliseconds) }
+                result?.map { it.toDomain() }.orEmpty().also { cacheManager.writeAndConvertToJson(CARD_CACHE_KEY, it,2.minutes.inWholeMilliseconds) }
             }
         }
     }
@@ -54,7 +54,6 @@ class UserCardInfoRepositoryImpl @Inject constructor(
     }
 
     companion object{
-        const val CARD_CASH_KEY = "Card_Cash_Key"
-        const val BALANCE_CASH_KEY = "Balance_Cash_Key"
+        const val CARD_CACHE_KEY = "Card_Cache_Key"
     }
 }

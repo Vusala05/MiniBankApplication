@@ -1,7 +1,8 @@
 package com.example.core.domain.feature
 
 interface CacheManager  {
-    fun writeData(key : String, value : Any?, expirationTime : Long)
+    suspend  fun  writeData(key : String, value : String , expirationTime : Long)
 
-    fun getData (key : String, forceToRefresh : Boolean) : Any?
+    suspend fun getData (key : String, pullRequest : Boolean) : String?
 }
+

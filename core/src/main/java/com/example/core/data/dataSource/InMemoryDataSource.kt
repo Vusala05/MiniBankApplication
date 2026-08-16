@@ -1,32 +1,36 @@
 package com.example.core.data.dataSource
 
 import com.example.core.domain.feature.CacheManager
+import kotlinx.serialization.Serializable
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 class InMemoryDataSource @Inject constructor() : CacheManager {
     var cachedEntry = ConcurrentHashMap<String, InMemoryDataEntry>()
 
-    override fun writeData(key: String, value: Any?, expirationTime: Long) {
+    override suspend fun  writeData(key: String, value: String, expirationTime: Long) {
     cachedEntry[key] = InMemoryDataEntry(value,expirationTime, System.currentTimeMillis())
 
     }
 
-    override fun getData(key: String,forceToRefresh : Boolean): Any? {
+    override suspend fun getData(key: String,pullRequest : Boolean): String? {
         val matchedCache = cachedEntry[key]
         matchedCache?.let {
-            val timeIsValid = System.nanoTime() - matchedCache.writeAtMillis < matchedCache.expirationDuration
-            if(matchedCache.data!=null && timeIsValid && !forceToRefresh ){
+            val timeIsOver = matchedCache.expirationDuration <= System.currentTimeMillis() - matchedCache.writeAtMillis
+            if(timeIsOver || pullRequest){
+                cachedEntry.remove(key)
+                return null
+            }
+            if(matchedCache.data!=null ){
                 return matchedCache.data
             }
         }
-
         return null
     }
 }
-
+@Serializable
 data class InMemoryDataEntry(
-    val data : Any?,
+    val data : String?,
     val expirationDuration : Long,
     val writeAtMillis : Long
 )

@@ -3,7 +3,9 @@ package com.example.feature_transaction.domain.response
 import com.example.feature_transaction.data.util.TransactionStatus
 import com.example.feature_transaction.data.util.TransactionType
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class TransactionDO(
     val id: String,
     val cardId: String,
