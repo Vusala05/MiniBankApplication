@@ -24,7 +24,11 @@ class TransactionViewModel @Inject constructor(
     init {
         viewModelScope.launch {
          val initialData = loadTransactions(offset = 0,userPullRequest = false)
-            updateState { it.copy(transactionList = initialData ) }
+            if(initialData!=null){
+                updateState { it.copy(transactionList = initialData ,
+                    paginationIsFinished = initialData.size != TransactionContract.MAX_PAGE) }
+
+            }
         }
         observeTransactionAndGrouped()
 
@@ -33,22 +37,24 @@ class TransactionViewModel @Inject constructor(
     private suspend fun loadTransactions(
         offset : Int,
         userPullRequest : Boolean,
-    ) : List<TransactionDO> {
+    ) : List<TransactionDO>? {
 
         updateState { it.copy(isLoading = true, isPageLoading = true) }
-
+        if(userPullRequest){
+            updateState {it.copy(isRefreshing = true) }
+        }
         when(val res = getTransactionUseCase(offset, userPullRequest)){
                 is ResultWrapper.Success -> {
-                     updateState{ it.copy(isLoading = false, isPageLoading = false) }
+                     updateState{ it.copy(isLoading = false, isPageLoading = false, isRefreshing = false) }
 
                     return res.data
 
                 }
                 is ResultWrapper.Error -> {
-                    updateState { it.copy(isLoading = false, isPageLoading = false) }
+                    updateState { it.copy(isLoading = false, isPageLoading = false, isRefreshing = false) }
                     handleError(res.error)
 
-                    return emptyList()
+                    return null
                 }
             }
 
@@ -63,9 +69,7 @@ class TransactionViewModel @Inject constructor(
          is TransactionContract.Intent.ReloadPage -> {
              reloadTransactions()
          }
-         is TransactionContract.Intent.PullRequestRequired -> {
-             updateState { it.copy(pullRequest = it.pullRequest) }
-         }
+
      }
     }
 
@@ -77,17 +81,28 @@ class TransactionViewModel @Inject constructor(
 
         viewModelScope.launch {
             pagingMutex.withLock {
-                val afterTransactionList = currentState().transactionList
-             if(beforeWaitingTransactionList != afterTransactionList || currentState.paginationIsFinished){
-               return@withLock
-             }
-                val newTransactionList  = loadTransactions(offset = currentState.transactionList.size, userPullRequest = false)
+                val afterState = currentState()
+                val afterTransactionList = afterState.transactionList
+                if (beforeWaitingTransactionList != afterTransactionList || afterState.paginationIsFinished) {
+                    return@withLock
+                }
+                val newTransactionList = loadTransactions(
+                    offset = afterState.transactionList.size,
+                    userPullRequest = false
+                )
 
                 /*if(transactionList.lastOrNull()?. == currentState.transactionList.lastOrNull()?.id){
                     return@withLock
                 }*/
-
-                updateState { it.copy(transactionList = currentState.transactionList + newTransactionList, paginationIsFinished = newTransactionList.size != TransactionContract.MAX_PAGE) } }
+                if (newTransactionList != null) {
+                    updateState {
+                        it.copy(
+                            transactionList = it.transactionList + newTransactionList,
+                            paginationIsFinished = newTransactionList.size != TransactionContract.MAX_PAGE
+                        )
+                    }
+                }
+            }
         }
 
     }
@@ -96,9 +111,18 @@ class TransactionViewModel @Inject constructor(
         return list.groupBy { it.timestamp.substring(0,10) }
     }
     private fun reloadTransactions() {
-        viewModelScope.launch {
-            val refreshedTransactions = loadTransactions(offset = 0, userPullRequest = true)
-            updateState { it.copy(transactionList = refreshedTransactions, paginationIsFinished = false) }
+            viewModelScope.launch {
+                pagingMutex.withLock {
+                val refreshedTransactions = loadTransactions(offset = 0, userPullRequest = true)
+                    if(refreshedTransactions!=null) {
+                        updateState {
+                            it.copy(
+                                transactionList = refreshedTransactions,
+                                paginationIsFinished = false
+                            )
+                        }
+                    }
+            }
         }
     }
 

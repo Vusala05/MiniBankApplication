@@ -21,6 +21,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +41,8 @@ fun TransactionScreen(
     handleIntent: (TransactionContract.Intent) -> Unit
 ) {
     val listState = rememberLazyListState()
+    val pullRefreshState = rememberPullToRefreshState()
+
 
     Paging(
         enabled = true,
@@ -69,63 +74,78 @@ fun TransactionScreen(
             )
         }
     ) { innerPadding ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = { handleIntent(TransactionContract.Intent.ReloadPage) },
+            state = pullRefreshState,
+            indicator = {
+                Indicator(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    isRefreshing = state.isRefreshing,
+                    containerColor = Color.White,
+                    color = Color.Black,
+                    state = pullRefreshState
+                )
+            }
         ) {
-            when {
-                state.isLoading -> {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .align(Alignment.Center),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                when {
+                    state.isLoading && state.groupedTransactionList.isEmpty() -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .align(Alignment.Center),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
 
-                state.groupedTransactionList.isEmpty() -> {
-                    Text(
-                        text = "No transactions found",
-                        fontSize = 14.sp,
-                        color = Color.Gray,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+                    state.groupedTransactionList.isEmpty() -> {
+                        Text(
+                            text = "No transactions found",
+                            fontSize = 14.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.align(Alignment.Center)
+                        )
+                    }
 
-                else -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        state = listState,
-                        verticalArrangement = Arrangement.spacedBy(5.dp)
-                    ) {
-                        state.groupedTransactionList.forEach { (day, transactions) ->
-                            stickyHeader {
-                                Surface(color = MaterialTheme.colorScheme.background) {
-                                    Text(
-                                        text = day,
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(8.dp),
-                                        fontWeight = FontWeight.Bold
-                                    )
+                    else -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            state = listState,
+                            verticalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            state.groupedTransactionList.forEach { (day, transactions) ->
+                                stickyHeader {
+                                    Surface(color = MaterialTheme.colorScheme.background) {
+                                        Text(
+                                            text = day,
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(8.dp),
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                }
+
+                                items(transactions, key = { it.id }) { transaction ->
+                                    TransactionItem(transaction = transaction)
                                 }
                             }
 
-                            items(transactions, key = { it.id }) { transaction ->
-                                TransactionItem(transaction = transaction)
-                            }
-                        }
-
-                        if (state.isPageLoading && !state.groupedTransactionList.isEmpty() && !state.paginationIsFinished) {
-                            item {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(12.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    CircularProgressIndicator()
+                            if (state.isPageLoading && !state.groupedTransactionList.isEmpty()) {
+                                item {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(12.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator()
+                                    }
                                 }
                             }
                         }
@@ -134,4 +154,5 @@ fun TransactionScreen(
             }
         }
     }
+
 }

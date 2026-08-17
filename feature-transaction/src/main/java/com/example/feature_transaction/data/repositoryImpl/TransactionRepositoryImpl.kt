@@ -20,7 +20,7 @@ class TransactionRepositoryImpl @Inject constructor(
     @CacheModule.LocalCacheManager val cacheManager: CacheManager
 ) : TransactionRepository {
     override suspend fun getTransaction(offset : Int, userPullRequest : Boolean): ResultWrapper<List<TransactionDO>> {
-        val transactionData = cacheManager.getAndConvertToModel< List<TransactionDO>>("${TRANSACTION_KEY}_$offset",false)
+        val transactionData = cacheManager.getAndConvertToModel< List<TransactionDO>>("${TRANSACTION_KEY}_$offset",userPullRequest)
         if(transactionData!=null){
             return ResultWrapper.Success(data = transactionData)
         }
@@ -30,6 +30,8 @@ class TransactionRepositoryImpl @Inject constructor(
             result?.map{it.toDomain()}.orEmpty().also { cacheManager.writeAndConvertToJson("${TRANSACTION_KEY}_$offset",it,2.minutes.inWholeMilliseconds) }
         }
     }
+
+
     companion object{
         const val TRANSACTION_KEY = "TRANSACTION_KEY"
     }

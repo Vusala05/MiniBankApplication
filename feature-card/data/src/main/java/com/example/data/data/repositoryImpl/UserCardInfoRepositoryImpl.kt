@@ -28,9 +28,9 @@ class UserCardInfoRepositoryImpl @Inject constructor(
     val mutex = Mutex()
 
 
-    override suspend fun getCards(userForceToRefresh : Boolean): ResultWrapper<List<CardDO>> {
+    override suspend fun getCards(userPullRequest : Boolean): ResultWrapper<List<CardDO>> {
 
-        val cachedCardList = cacheManager.getAndConvertToModel<List<CardDO>>(CARD_CACHE_KEY, userForceToRefresh)
+        val cachedCardList = cacheManager.getAndConvertToModel<List<CardDO>>(CARD_CACHE_KEY, userPullRequest)
 
 
         if(cachedCardList!=null){

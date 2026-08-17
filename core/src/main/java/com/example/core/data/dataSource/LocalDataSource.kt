@@ -20,5 +20,6 @@ class LocalDataSource @Inject constructor(val dao: CacheDao) : CacheManager {
                 return dataEntity.value
 
     }
+
 }
 
