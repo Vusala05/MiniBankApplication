@@ -31,6 +31,12 @@ class TransactionRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun invalidateKeys(keys: List<String>) {
+        keys.forEach { key ->
+           cacheManager.invalidateKey(key)
+        }
+    }
+
 
     companion object{
         const val TRANSACTION_KEY = "TRANSACTION_KEY"
