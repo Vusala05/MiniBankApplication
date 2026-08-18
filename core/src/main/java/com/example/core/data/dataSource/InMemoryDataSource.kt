@@ -29,7 +29,9 @@ class InMemoryDataSource @Inject constructor() : CacheManager {
     }
 
     override suspend fun invalidateKeys(keys: List<String>) {
-        TODO("Not yet implemented")
+        keys.forEach { key ->
+            cachedEntry.remove(key)
+        }
     }
 
 }
