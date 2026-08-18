@@ -1,5 +1,6 @@
 package com.example.core.data.dataSource
 
+import androidx.compose.runtime.key
 import com.example.core.data.model.CacheEntity
 import com.example.core.domain.feature.CacheManager
 import javax.inject.Inject
@@ -21,8 +22,9 @@ class LocalDataSource @Inject constructor(val dao: CacheDao) : CacheManager {
 
     }
 
-    override suspend fun invalidateKeys(keys: List<String>) {
-        TODO("Not yet implemented")
+    override suspend fun invalidateKey(key: String) {
+            dao.removeData(key)
+        
     }
 
 }
