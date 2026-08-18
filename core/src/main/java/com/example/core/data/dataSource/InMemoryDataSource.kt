@@ -28,10 +28,9 @@ class InMemoryDataSource @Inject constructor() : CacheManager {
         return null
     }
 
-    override suspend fun invalidateKeys(keys: List<String>) {
-        keys.forEach { key ->
-            cachedEntry.remove(key)
-        }
+    override suspend fun invalidateKey(key: String) {
+        cachedEntry.remove(key)
+
     }
 
 }

@@ -22,10 +22,9 @@ class LocalDataSource @Inject constructor(val dao: CacheDao) : CacheManager {
 
     }
 
-    override suspend fun invalidateKeys(keys: List<String>) {
-        keys.forEach { key ->
+    override suspend fun invalidateKey(key: String) {
             dao.removeData(key)
-        }
+        
     }
 
 }
