@@ -31,7 +31,7 @@ before_script:
   - sdkmanager "platforms;android-${ANDROID_COMPILE_SDK}" "platform-tools" "build-tools;${ANDROID_BUILD_TOOLS}"
   - chmod +x ./gradlew
 
-build_apk:
+build_debug_apk:
   stage: build
   script:
     - ./gradlew assembleDebug
@@ -42,3 +42,16 @@ build_apk:
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+build_release_apk:
+  stage: build
+  script:
+    - base64 -d "$KEYSTORE_BASE64" > keystore.jks
+    - export KEYSTORE_PATH="${PWD}/keystore.jks"
+    - ./gradlew assembleRelease
+  artifacts:
+    paths:
+      - app/build/outputs/apk/release/*.apk
+    expire_in: 30 days
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
