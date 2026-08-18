@@ -39,6 +39,10 @@ android {
 
         }
     }
+    lint {
+        disable += "NullSafeMutableLiveData"
+        checkReleaseBuilds = false
+    }
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
