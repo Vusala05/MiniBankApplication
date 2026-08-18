@@ -5,5 +5,7 @@ interface CacheManager  {
 
     suspend fun getData (key : String, pullRequest : Boolean) : String?
 
+    suspend fun invalidateKeys(keys : List<String>)
+
 }
 
