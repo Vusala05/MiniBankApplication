@@ -42,21 +42,14 @@ build_debug_apk:
     expire_in: 30 days
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
 build_release_apk:
   stage: build
   script:
     - base64 -d "$KEYSTORE_BASE64" > keystore.jks
     - export KEYSTORE_PATH="${PWD}/keystore.jks"
     - ./gradlew assembleRelease
-    - apt-get install -y curl
-    - curl -sL https://firebase.tools | bash
-    - base64 -d "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
-    - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
-    - echo "FIREBASE_APP_ID_VALUE=[$FIREBASE_APP_ID]"
-    - CLEAN_APP_ID=$(echo "$FIREBASE_APP_ID" | tr -d '[:space:]')
-    - firebase appdistribution:distribute app/build/outputs/apk/release/*.apk
-        --app "$CLEAN_APP_ID"
-        --groups "Testers"
   artifacts:
     paths:
       - app/build/outputs/apk/release/*.apk
