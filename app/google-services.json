@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "131883235612",
+    "project_id": "minibank-app-10170",
+    "storage_bucket": "minibank-app-10170.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:131883235612:android:46ac89c1041362de3f62d9",
+        "android_client_info": {
+          "package_name": "com.example.minibankapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCCyXrsfFSmOZQ5o7e_8NDmWwbGUU_DR5Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

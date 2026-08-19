@@ -49,6 +49,12 @@ build_release_apk:
     - base64 -d "$KEYSTORE_BASE64" > keystore.jks
     - export KEYSTORE_PATH="${PWD}/keystore.jks"
     - ./gradlew assembleRelease
+    - apt-get install -y curl
+    - curl -sL https://firebase.tools | bash
+    - firebase appdistribution:distribute app/build/outputs/apk/release/*.apk
+      --app "$FIREBASE_APP_ID"
+      --groups "Testers"
+      --service-cred-file "$FIREBASE_SERVICE_ACCOUNT"
   artifacts:
     paths:
       - app/build/outputs/apk/release/*.apk
