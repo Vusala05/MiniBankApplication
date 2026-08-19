@@ -41,8 +41,6 @@ build_debug_apk:
     expire_in: 30 days
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-
 build_release_apk:
   stage: build
   script:
@@ -51,10 +49,10 @@ build_release_apk:
     - ./gradlew assembleRelease
     - apt-get install -y curl
     - curl -sL https://firebase.tools | bash
+    - export GOOGLE_APPLICATION_CREDENTIALS="$FIREBASE_SERVICE_ACCOUNT"
     - firebase appdistribution:distribute app/build/outputs/apk/release/*.apk
       --app "$FIREBASE_APP_ID"
       --groups "Testers"
-      --service-cred-file "$FIREBASE_SERVICE_ACCOUNT"
   artifacts:
     paths:
       - app/build/outputs/apk/release/*.apk
