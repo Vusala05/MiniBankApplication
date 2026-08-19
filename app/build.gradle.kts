@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.serialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt.android)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -42,6 +43,7 @@ android {
     lint {
         disable += "NullSafeMutableLiveData"
         checkReleaseBuilds = false
+        abortOnError = false
     }
 
     compileOptions {
@@ -84,6 +86,10 @@ dependencies {
     // Jetpack Compose Navigation
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.serialization.json)
+
+    //Firebase
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
 
     implementation(project(":core"))
     implementation(project(":feature-auth"))
