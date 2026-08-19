@@ -2,6 +2,7 @@ image: eclipse-temurin:17-jdk
 
 stages:
   - build
+  - distribute
 
 variables:
   ANDROID_COMPILE_SDK: "34"
@@ -53,5 +54,21 @@ build_release_apk:
     paths:
       - app/build/outputs/apk/release/*.apk
     expire_in: 30 days
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+
+distribute_to_firebase:
+  stage: distribute
+  needs:
+    - build_release_apk
+  script:
+    - apt-get install -y curl
+    - curl -sL https://firebase.tools | bash
+    - base64 -d "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
+    - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
+    - CLEAN_APP_ID=$(echo "$FIREBASE_APP_ID" | tr -d '[:space:]')
+    - firebase appdistribution:distribute app/build/outputs/apk/release/*.apk
+      --app "$CLEAN_APP_ID"
+      --groups "Testers"
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
