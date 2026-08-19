@@ -75,3 +75,20 @@ build_tagged_release:
     expire_in: 90 days
   rules:
     - if: '$CI_COMMIT_TAG'
+
+distribute_tagged_release_to_firebase:
+  stage: distribute
+  needs:
+    - build_tagged_release
+  script:
+    - apt-get install -y curl
+    - curl -sL https://firebase.tools | bash
+    - base64 -d "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
+    - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
+    - CLEAN_APP_ID=$(echo "$FIREBASE_APP_ID" | tr -d '[:space:]')
+    - firebase appdistribution:distribute app/build/outputs/apk/release/*.apk
+      --app "$CLEAN_APP_ID"
+      --groups "Testers"
+      --release-notes "Release ${CI_COMMIT_TAG}"
+  rules:
+    - if: '$CI_COMMIT_TAG'
