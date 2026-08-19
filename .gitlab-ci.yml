@@ -60,3 +60,18 @@ distribute_to_firebase:
       --groups "Testers"
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
+
+build_tagged_release:
+  stage: build
+  script:
+    - export APP_VERSION_NAME="${CI_COMMIT_TAG#v}"
+    - export APP_VERSION_CODE="$CI_PIPELINE_IID"
+    - base64 -d "$KEYSTORE_BASE64" > keystore.jks
+    - export KEYSTORE_PATH="${PWD}/keystore.jks"
+    - ./gradlew assembleRelease
+  artifacts:
+    paths:
+      - app/build/outputs/apk/release/*.apk
+    expire_in: 90 days
+  rules:
+    - if: '$CI_COMMIT_TAG'
