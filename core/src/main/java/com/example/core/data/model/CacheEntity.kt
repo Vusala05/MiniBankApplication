@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
 data class CacheEntity(
     @PrimaryKey
     val key : String,
+    val groupKey : String,
     val value : String?,
     val expirationTime : Long,
     val addedAtTime : Long

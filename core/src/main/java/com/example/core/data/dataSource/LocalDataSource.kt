@@ -1,20 +1,19 @@
 package com.example.core.data.dataSource
 
-import androidx.compose.runtime.key
 import com.example.core.data.model.CacheEntity
 import com.example.core.domain.feature.CacheManager
 import javax.inject.Inject
 
 class LocalDataSource @Inject constructor(val dao: CacheDao) : CacheManager {
 
-    override suspend fun writeData(key: String, value: String, expirationTime: Long) {
-        dao.insertData(CacheEntity(key, value , expirationTime, addedAtTime = System.currentTimeMillis()))
+    override suspend fun writeData(key: String, groupKey : String, value: String, expirationTime: Long) {
+        dao.insertData(CacheEntity(key, groupKey, value , expirationTime, addedAtTime = System.currentTimeMillis()))
     }
 
-    override suspend fun getData(key: String, pullRequest: Boolean): String? {
+    override suspend fun getData(key: String): String? {
         val dataEntity = dao.getData(key) ?: return null
                 val timeIsNotValid = dataEntity.expirationTime <= System.currentTimeMillis() - dataEntity.addedAtTime
-                if(timeIsNotValid || pullRequest){
+                if(timeIsNotValid){
                     dao.removeData(key)
                     return null
                 }
@@ -22,10 +21,10 @@ class LocalDataSource @Inject constructor(val dao: CacheDao) : CacheManager {
 
     }
 
-    override suspend fun invalidateKey(key: String) {
-            dao.removeData(key)
-        
+    override suspend fun invalidateGroupKey(groupKey: String) {
+        dao.removeDataGroup(groupKey)
     }
+
 
 }
 

@@ -4,12 +4,13 @@ import com.example.core.domain.feature.CacheManager
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-suspend inline fun <reified T> CacheManager.writeAndConvertToJson(key : String, value : T, ttl : Long) {
+suspend inline fun <reified T> CacheManager.writeAndConvertToJson(key : String, groupKey : String?=null, value : T, ttl : Long) {
     val convertedToString =  Json.encodeToString(value)
-    writeData(key, convertedToString, ttl)
+    val groupKey = groupKey ?: key
+    writeData(key, groupKey,convertedToString, ttl)
 }
-suspend  inline fun <reified T> CacheManager.getAndConvertToModel(key : String, pullRequest: Boolean) : T? {
-    val json = getData(key,pullRequest) ?: return null
+suspend  inline fun <reified T> CacheManager.getAndConvertToModel(key : String) : T? {
+    val json = getData(key) ?: return null
     try {
         return Json.decodeFromString<T>(json)
     } catch (e : Exception){
