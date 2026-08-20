@@ -26,7 +26,7 @@ build_release_apk:
   tags:
     - mac
   script:
-    - base64 -d -i "$KEYSTORE_BASE64" -o keystore.jks
+    - echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
     - export KEYSTORE_PATH="${PWD}/keystore.jks"
     - ./gradlew assembleRelease
   artifacts:
@@ -44,7 +44,7 @@ distribute_to_firebase:
     - build_release_apk
   script:
     - curl -sL https://firebase.tools | bash
-    - base64 -d -i "$FIREBASE_SERVICE_ACCOUNT" -o firebase-service-account.json
+    - echo "$FIREBASE_SERVICE_ACCOUNT" | base64 --decode > firebase-service-account.json
     - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
     - CLEAN_APP_ID=$(echo "$FIREBASE_APP_ID" | tr -d '[:space:]')
     - firebase appdistribution:distribute app/build/outputs/apk/release/*.apk
@@ -82,7 +82,7 @@ build_tagged_release:
   script:
     - export APP_VERSION_NAME="${CI_COMMIT_TAG#v}"
     - export APP_VERSION_CODE="$CI_PIPELINE_IID"
-    - base64 -d -i "$KEYSTORE_BASE64" -o keystore.jks
+    - echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
     - export KEYSTORE_PATH="${PWD}/keystore.jks"
     - ./gradlew assembleRelease
   artifacts:
@@ -100,7 +100,7 @@ distribute_tagged_release_to_firebase:
     - build_tagged_release
   script:
     - curl -sL https://firebase.tools | bash
-    - base64 -d -i "$FIREBASE_SERVICE_ACCOUNT" -o firebase-service-account.json
+    - echo "$FIREBASE_SERVICE_ACCOUNT" | base64 --decode > firebase-service-account.json
     - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
     - CLEAN_APP_ID=$(echo "$FIREBASE_APP_ID" | tr -d '[:space:]')
     - firebase appdistribution:distribute app/build/outputs/apk/release/*.apk
