@@ -1,6 +1,7 @@
 image: eclipse-temurin:17-jdk
 
 stages:
+  - validate
   - build
   - distribute
 
@@ -61,8 +62,27 @@ distribute_to_firebase:
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
 
+validate_tag:
+  stage: validate
+  image: alpine:latest
+  script:
+    - |
+      if echo "$CI_COMMIT_TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+        echo "Tag is valid (Release Candidate format): $CI_COMMIT_TAG"
+      elif echo "$CI_COMMIT_TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+        echo "Tag is valid (Final Release format): $CI_COMMIT_TAG"
+      else
+        echo "Error: Tag format is not valid: '$CI_COMMIT_TAG'"
+        echo "Correct formats: v1.0.0 (release candidate) or v1.0.0.1 (final release)"
+        exit 1
+      fi
+  rules:
+    - if: '$CI_COMMIT_TAG'
+
 build_tagged_release:
   stage: build
+  needs:
+    - validate_tag
   script:
     - export APP_VERSION_NAME="${CI_COMMIT_TAG#v}"
     - export APP_VERSION_CODE="$CI_PIPELINE_IID"
