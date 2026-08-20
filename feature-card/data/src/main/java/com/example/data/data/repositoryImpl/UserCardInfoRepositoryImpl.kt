@@ -30,7 +30,7 @@ class UserCardInfoRepositoryImpl @Inject constructor(
 
     override suspend fun getCards(userPullRequest : Boolean): ResultWrapper<List<CardDO>> {
 
-        val cachedCardList = cacheManager.getAndConvertToModel<List<CardDO>>(CARD_CACHE_KEY, userPullRequest)
+        val cachedCardList = if(!userPullRequest) cacheManager.getAndConvertToModel<List<CardDO>>(CARD_CACHE_KEY) else null
 
 
         if(cachedCardList!=null){
@@ -40,7 +40,7 @@ class UserCardInfoRepositoryImpl @Inject constructor(
             return handleResultWrapper(result = apiCallingHandler(globalNetwork = globalNetwork){
                 dataSource.getCards()
             }){ result ->
-                result?.map { it.toDomain() }.orEmpty().also { cacheManager.writeAndConvertToJson(CARD_CACHE_KEY, it,2.minutes.inWholeMilliseconds) }
+                result?.map { it.toDomain() }.orEmpty().also { cacheManager.writeAndConvertToJson(CARD_CACHE_KEY, groupKey = null,it,2.minutes.inWholeMilliseconds) }
             }
         }
     }

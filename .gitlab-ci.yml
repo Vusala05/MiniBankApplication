@@ -2,31 +2,93 @@ image: eclipse-temurin:17-jdk
 
 stages:
   - build
+  - distribute
 
 variables:
   ANDROID_COMPILE_SDK: "34"
   ANDROID_BUILD_TOOLS: "34.0.0"
   ANDROID_SDK_TOOLS: "10406996"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
+
+cache:
+  key: android-sdk-cache
+  paths:
+    - android-sdk-root/
+    - .gradle/
 
 before_script:
   - apt-get update -qq && apt-get install -y wget unzip
   - export ANDROID_HOME="${PWD}/android-sdk-root"
-  - install -d $ANDROID_HOME
-  - wget --quiet --output-document=$ANDROID_HOME/cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_TOOLS}_latest.zip"
-  - unzip -q -d "$ANDROID_HOME/cmdline-tools" "$ANDROID_HOME/cmdline-tools.zip"
-  - mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+  - export GRADLE_USER_HOME="${PWD}/.gradle"
+  - |
+    if [ ! -d "$ANDROID_HOME/cmdline-tools/latest" ]; then
+      install -d $ANDROID_HOME
+      wget --quiet --output-document=$ANDROID_HOME/cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_TOOLS}_latest.zip"
+      unzip -q -d "$ANDROID_HOME/cmdline-tools" "$ANDROID_HOME/cmdline-tools.zip"
+      mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+    fi
   - export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-  - yes | sdkmanager --licenses > /dev/null || true
+  - yes | sdkmanager --licenses > /dev/null 2>&1 || true
   - sdkmanager "platforms;android-${ANDROID_COMPILE_SDK}" "platform-tools" "build-tools;${ANDROID_BUILD_TOOLS}"
   - chmod +x ./gradlew
 
-build_apk:
+build_release_apk:
   stage: build
   script:
-    - ./gradlew assembleDebug
+    - base64 -d "$KEYSTORE_BASE64" > keystore.jks
+    - export KEYSTORE_PATH="${PWD}/keystore.jks"
+    - ./gradlew assembleRelease
   artifacts:
     paths:
-      - app/build/outputs/apk/debug/*.apk
+      - app/build/outputs/apk/release/*.apk
     expire_in: 30 days
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
+
+distribute_to_firebase:
+  stage: distribute
+  needs:
+    - build_release_apk
+  script:
+    - apt-get install -y curl
+    - curl -sL https://firebase.tools | bash
+    - base64 -d "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
+    - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
+    - CLEAN_APP_ID=$(echo "$FIREBASE_APP_ID" | tr -d '[:space:]')
+    - firebase appdistribution:distribute app/build/outputs/apk/release/*.apk
+      --app "$CLEAN_APP_ID"
+      --groups "Testers"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "master"'
+
+build_tagged_release:
+  stage: build
+  script:
+    - export APP_VERSION_NAME="${CI_COMMIT_TAG#v}"
+    - export APP_VERSION_CODE="$CI_PIPELINE_IID"
+    - base64 -d "$KEYSTORE_BASE64" > keystore.jks
+    - export KEYSTORE_PATH="${PWD}/keystore.jks"
+    - ./gradlew assembleRelease
+  artifacts:
+    paths:
+      - app/build/outputs/apk/release/*.apk
+    expire_in: 90 days
+  rules:
+    - if: '$CI_COMMIT_TAG'
+
+distribute_tagged_release_to_firebase:
+  stage: distribute
+  needs:
+    - build_tagged_release
+  script:
+    - apt-get install -y curl
+    - curl -sL https://firebase.tools | bash
+    - base64 -d "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
+    - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
+    - CLEAN_APP_ID=$(echo "$FIREBASE_APP_ID" | tr -d '[:space:]')
+    - firebase appdistribution:distribute app/build/outputs/apk/release/*.apk
+      --app "$CLEAN_APP_ID"
+      --groups "Testers"
+      --release-notes "Release ${CI_COMMIT_TAG}"
+  rules:
+    - if: '$CI_COMMIT_TAG'
