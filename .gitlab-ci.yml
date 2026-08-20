@@ -23,6 +23,8 @@ before_script:
 
 build_release_apk:
   stage: build
+  tags:
+    - mac
   script:
     - base64 -d "$KEYSTORE_BASE64" > keystore.jks
     - export KEYSTORE_PATH="${PWD}/keystore.jks"
@@ -36,6 +38,8 @@ build_release_apk:
 
 distribute_to_firebase:
   stage: distribute
+  tags:
+    - mac
   needs:
     - build_release_apk
   script:
@@ -52,6 +56,8 @@ distribute_to_firebase:
 validate_tag:
   stage: validate
   image: alpine:latest
+  tags:
+    - mac
   before_script: []
   script:
     - |
@@ -69,6 +75,8 @@ validate_tag:
 
 build_tagged_release:
   stage: build
+  tags:
+    - mac
   needs:
     - validate_tag
   script:
@@ -86,6 +94,8 @@ build_tagged_release:
 
 distribute_tagged_release_to_firebase:
   stage: distribute
+  tags:
+    - mac
   needs:
     - build_tagged_release
   script:
