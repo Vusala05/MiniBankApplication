@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import okhttp3.internal.wait
 import javax.inject.Inject
 
 @HiltViewModel
@@ -40,9 +41,6 @@ class TransactionViewModel @Inject constructor(
     ) : List<TransactionDO>? {
 
         updateState { it.copy(isLoading = true, isPageLoading = true) }
-        if(userPullRequest){
-            updateState {it.copy(isRefreshing = true) }
-        }
         when(val res = getTransactionUseCase(offset, userPullRequest)){
                 is ResultWrapper.Success -> {
                      updateState{ it.copy(isLoading = false, isPageLoading = false, isRefreshing = false) }
@@ -110,6 +108,7 @@ class TransactionViewModel @Inject constructor(
     }
     private fun reloadTransactions() {
             viewModelScope.launch {
+                updateState { it.copy(isRefreshing = true) }
                 pagingMutex.withLock {
                 val refreshedTransactions = loadTransactions(offset = 0, userPullRequest = true)
                     if(refreshedTransactions!=null) {
@@ -129,7 +128,6 @@ class TransactionViewModel @Inject constructor(
             state.distinctUntilChangedBy { it.transactionList }
                 .collectLatest {
                   val grouped = groupByDay(it.transactionList)
-
                     val groupedTransactionList = grouped.map { (string, dOS) ->
                         GroupedTransactionList(
                             time = string,
@@ -143,8 +141,13 @@ class TransactionViewModel @Inject constructor(
 
         }
     }
+    // name1: Farid.  name2: Vusala.  name3: Elshan -> [MapEntry(name1, Farid), MapEntry(...),
 
+   /* class MapEntry <K, V>(val key: K, val value: V?)
 
+    fun <K, V> Map<K, V>.getEntries() : List<MapEntry<K, V>> {
+        return keys.map { MapEntry(it, this.get(it)) }
+    }*/
 
 
     override fun showMessage(message: Int) {
@@ -165,7 +168,7 @@ class TransactionViewModel @Inject constructor(
         }
     }*/
 
-    /*if(newTransactionList?.lastOrNull()?. == afterState.transactionList.lastOrNull()?.id){
+        /*if(newTransactionList?.lastOrNull()?. == afterState.transactionList.lastOrNull()?.id){
                return@withLock
                }*/
 
