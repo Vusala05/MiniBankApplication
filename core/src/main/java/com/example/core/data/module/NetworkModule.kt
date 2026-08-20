@@ -66,7 +66,7 @@ object NetworkModule {
         val contentType = "application/json".toMediaType()
 
         return Retrofit.Builder()
-            .baseUrl("http://10.0.2.2:9090/api/v1/")
+            .baseUrl("http://10.68.18.241:9090/api/v1/")
             .client(okHttpClient)
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()

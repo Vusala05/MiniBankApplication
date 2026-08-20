@@ -12,9 +12,10 @@ class LocalDataSource @Inject constructor(val dao: CacheDao) : CacheManager {
 
     override suspend fun getData(key: String): String? {
         val dataEntity = dao.getData(key) ?: return null
+        val groupKey = dataEntity.groupKey
                 val timeIsNotValid = dataEntity.expirationTime <= System.currentTimeMillis() - dataEntity.addedAtTime
                 if(timeIsNotValid){
-                    dao.removeData(key)
+                    dao.removeDataGroup(groupKey)
                     return null
                 }
                 return dataEntity.value
