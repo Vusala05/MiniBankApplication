@@ -18,20 +18,8 @@ cache:
     - .gradle/
 
 before_script:
-  - apt-get update -qq && apt-get install -y wget unzip
-  - export ANDROID_HOME="${PWD}/android-sdk-root"
-  - export GRADLE_USER_HOME="${PWD}/.gradle"
-  - |
-    if [ ! -d "$ANDROID_HOME/cmdline-tools/latest" ]; then
-      install -d $ANDROID_HOME
-      wget --quiet --output-document=$ANDROID_HOME/cmdline-tools.zip "https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_SDK_TOOLS}_latest.zip"
-      unzip -q -d "$ANDROID_HOME/cmdline-tools" "$ANDROID_HOME/cmdline-tools.zip"
-      mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
-    fi
-  - export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-  - yes | sdkmanager --licenses > /dev/null 2>&1 || true
-  - sdkmanager "platforms;android-${ANDROID_COMPILE_SDK}" "platform-tools" "build-tools;${ANDROID_BUILD_TOOLS}"
-  - chmod +x ./gradlew
+    - export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+    - chmod +x ./gradlew
 
 build_release_apk:
   stage: build
@@ -51,7 +39,6 @@ distribute_to_firebase:
   needs:
     - build_release_apk
   script:
-    - apt-get install -y curl
     - curl -sL https://firebase.tools | bash
     - base64 -d "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
     - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
@@ -102,7 +89,6 @@ distribute_tagged_release_to_firebase:
   needs:
     - build_tagged_release
   script:
-    - apt-get install -y curl
     - curl -sL https://firebase.tools | bash
     - base64 -d "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
     - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
