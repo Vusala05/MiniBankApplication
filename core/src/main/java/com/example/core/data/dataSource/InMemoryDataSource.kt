@@ -8,16 +8,16 @@ import javax.inject.Inject
 class InMemoryDataSource @Inject constructor() : CacheManager {
     var cachedEntry = ConcurrentHashMap<String, InMemoryDataEntry>()
 
-    override suspend fun  writeData(key: String, value: String, expirationTime: Long) {
-    cachedEntry[key] = InMemoryDataEntry(value,expirationTime, System.currentTimeMillis())
+    override suspend fun  writeData(key: String, groupKey : String, value: String, expirationTime: Long) {
+    cachedEntry[key] = InMemoryDataEntry(value,  groupKey,expirationTime, System.currentTimeMillis())
 
     }
 
-    override suspend fun getData(key: String,pullRequest : Boolean): String? {
+    override suspend fun getData(key: String): String? {
         val matchedCache = cachedEntry[key]
         matchedCache?.let {
             val timeIsOver = matchedCache.expirationDuration <= System.currentTimeMillis() - matchedCache.writeAtMillis
-            if(timeIsOver || pullRequest){
+            if(timeIsOver){
                 cachedEntry.remove(key)
                 return null
             }
@@ -28,15 +28,17 @@ class InMemoryDataSource @Inject constructor() : CacheManager {
         return null
     }
 
-    override suspend fun invalidateKey(key: String) {
-        cachedEntry.remove(key)
+    override suspend fun invalidateGroupKey(groupKey: String) {
+        cachedEntry.entries.removeIf{it.value.groupKey == groupKey}
 
     }
+
 
 }
 @Serializable
 data class InMemoryDataEntry(
     val data : String?,
+    val groupKey : String,
     val expirationDuration : Long,
     val writeAtMillis : Long
 )

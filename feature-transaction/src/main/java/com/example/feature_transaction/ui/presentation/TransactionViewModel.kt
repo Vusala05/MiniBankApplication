@@ -18,7 +18,7 @@ import javax.inject.Inject
 @HiltViewModel
 class TransactionViewModel @Inject constructor(
     val getTransactionUseCase: GetTransactionUseCase,
-    val handleErrorUseCase: HandleErrorUseCase
+    val handleErrorUseCase: HandleErrorUseCase,
 ) : BaseViewModel<TransactionContract.State, TransactionContract.Effect>(TransactionContract.State(),handleErrorUseCase ) {
 
     init {
@@ -91,9 +91,7 @@ class TransactionViewModel @Inject constructor(
                     userPullRequest = false
                 )
 
-                /*if(transactionList.lastOrNull()?. == currentState.transactionList.lastOrNull()?.id){
-                    return@withLock
-                }*/
+
                 if (newTransactionList != null) {
                     updateState {
                         it.copy(
@@ -166,6 +164,10 @@ class TransactionViewModel @Inject constructor(
             //code block
         }
     }*/
+
+    /*if(newTransactionList?.lastOrNull()?. == afterState.transactionList.lastOrNull()?.id){
+               return@withLock
+               }*/
 
 
 
