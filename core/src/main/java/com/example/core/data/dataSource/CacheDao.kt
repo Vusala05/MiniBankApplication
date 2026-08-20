@@ -23,4 +23,5 @@ interface CacheDao {
     @Query("DELETE FROM CacheTable WHERE groupKey = :groupKey")
     suspend fun removeDataGroup(groupKey : String)
 
+
 }
