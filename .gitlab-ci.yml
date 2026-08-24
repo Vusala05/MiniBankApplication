@@ -43,7 +43,6 @@ distribute_to_firebase:
   needs:
     - build_release_apk
   script:
-    - curl -sL https://firebase.tools | bash
     - echo "$FIREBASE_SERVICE_ACCOUNT" | base64 -d > firebase-service-account.json
     - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
     - CLEAN_APP_ID=$(echo "$FIREBASE_APP_ID" | tr -d '[:space:]')
@@ -99,7 +98,6 @@ distribute_tagged_release_to_firebase:
   needs:
     - build_tagged_release
   script:
-    - curl -sL https://firebase.tools | bash
     - echo "$FIREBASE_SERVICE_ACCOUNT" | base64 -d > firebase-service-account.json
     - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
     - CLEAN_APP_ID=$(echo "$FIREBASE_APP_ID" | tr -d '[:space:]')
