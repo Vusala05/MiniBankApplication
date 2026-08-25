@@ -22,7 +22,7 @@ class TransferRepositoryImpl @Inject constructor(
         return handleResultWrapper(result = apiCallingHandler(globalNetwork = globalNetwork){
             dataSource.calculateCommission(calculateCommissionRequestDO.toEntity())
         }){ result ->
-            result?.toDomain() ?: CommissionPreviewResponseDO("","","","","")
+            result?.toDomain() ?: CommissionPreviewResponseDO("","","","","",false,false)
         }
     }
 
@@ -30,7 +30,7 @@ class TransferRepositoryImpl @Inject constructor(
         return handleResultWrapper(result = apiCallingHandler(globalNetwork = globalNetwork){
             dataSource.executeTransfer(transferRequestDo.toEntity())
         }){ result ->
-            result?.toDomain() ?: TransferResponseDO("","","","","","","", TransactionStatus.UNKNOWN,"")
+            result?.toDomain() ?: TransferResponseDO("","","","","","","", TransactionStatus.UNKNOWN,"", false,"","")
         }
     }
 

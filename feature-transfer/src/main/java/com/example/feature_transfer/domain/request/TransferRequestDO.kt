@@ -11,7 +11,7 @@ data class TransferRequestDO(
     fun toEntity() : TransferRequest{
         return TransferRequest(
             sourceCardId = this.sourceCardId,
-            destinationCardId = this.destinationCardId,
+            destinationPan = this.destinationCardId,
             amount = this.amount,
             currency = this.currency
         )

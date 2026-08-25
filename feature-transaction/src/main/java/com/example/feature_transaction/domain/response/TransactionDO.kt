@@ -15,6 +15,7 @@ data class TransactionDO(
     val status: TransactionStatus,
     val merchantName: String? = null,
     val timestamp: String,        // ISO-8601 string
-    val commission: String
+    val commission: String,
+    val destinationPan : String?=null
 ) {
 }

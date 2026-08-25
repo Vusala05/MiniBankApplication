@@ -18,8 +18,8 @@ cache:
     - .gradle/
 
 before_script:
-    - export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-    - chmod +x ./gradlew
+  - export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+  - chmod +x ./gradlew
 
 build_release_apk:
   stage: build
@@ -51,6 +51,24 @@ distribute_to_firebase:
       --groups "Testers"
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
+
+validate_branch_name:
+  stage: validate
+  image: alpine:latest
+  tags:
+    - mac
+  before_script: []
+  script:
+    - |
+      if echo "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" | grep -Eq '^(dev|feature|tech|epic|release|bugfix|merge)/.+'; then
+        echo "The name of branch is correct: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
+      else
+        echo "ERROR: The name format is incorrect: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME'"
+        echo "Allowed formats: dev/*, feature/*, tech/*, epic/*, release/*, bugfix/*, merge/*"
+        exit 1
+      fi
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 validate_tag:
   stage: validate

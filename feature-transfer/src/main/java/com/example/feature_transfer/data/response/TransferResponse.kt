@@ -11,8 +11,8 @@ data class TransferResponse(
     val transactionId: String?=null,
     @SerialName("sourceCardId")
     val sourceCardId: String?=null,
-    @SerialName("destinationCardId")
-    val destinationCardId: String?=null,
+    @SerialName("destinationPan")
+    val destinationPan: String?=null,
     @SerialName("transferredAmount")
     val transferredAmount: String?=null,
     @SerialName("commissionAmount")
@@ -24,19 +24,29 @@ data class TransferResponse(
     @SerialName("status")
     val status: TransactionStatus?=null,
     @SerialName("timestamp")
-    val timestamp: String?=null
+    val timestamp: String?=null,
+    @SerialName("requires3DS")
+    val requires3DS : Boolean?=null,
+    @SerialName("threeDSUrl")
+    val threeDSUrl : String?=null,
+    @SerialName("callbackUrl")
+    val callbackUrl : String?=null
 ) {
         fun toDomain(): TransferResponseDO {
             return TransferResponseDO(
                 transactionId = this.transactionId.orEmpty(),
                 sourceCardId = this.sourceCardId.orEmpty(),
-                destinationCardId = this.destinationCardId.orEmpty(),
+                destinationPan = this.destinationPan.orEmpty(),
                 transferredAmount = this.transferredAmount.orEmpty(),
                 commissionAmount = this.commissionAmount.orEmpty(),
                 totalAmount = this.totalAmount.orEmpty(),
                 currency = this.currency.orEmpty(),
                 status = this.status ?: TransactionStatus.UNKNOWN,
-                timestamp = this.timestamp.orEmpty() )
+                timestamp = this.timestamp.orEmpty(),
+                requires3DS = this.requires3DS ?:false,
+                threeDSUrl = this.threeDSUrl,
+                callbackUrl = this.callbackUrl
+            )
         }
 }
 

@@ -1,6 +1,6 @@
-package com.example.feature_auth.data.response
+package com.example.data.data.response
 
-import com.example.feature_auth.domain.response.UserProfileDO
+import com.example.data.domain.response.UserProfileDO
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -17,7 +17,9 @@ data class UserProfile(
     @SerialName("email")
     val email: String?=null,
     @SerialName("phoneNumber")
-    val phoneNumber: String?=null
+    val phoneNumber: String?=null,
+    @SerialName("hasPin")
+    val hasPin : Boolean?=null
 ){
     companion object{
         fun UserProfile.toDomain(): UserProfileDO {
@@ -27,7 +29,8 @@ data class UserProfile(
                 firstName = this.firstName.orEmpty(),
                 lastName = this.lastName.orEmpty(),
                 email = this.email.orEmpty(),
-                phoneNumber = this.phoneNumber.orEmpty()
+                phoneNumber = this.phoneNumber.orEmpty(),
+                hasPin = this.hasPin ?: false
             )
         }
     }

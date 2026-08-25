@@ -1,6 +1,7 @@
 package com.example.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +33,7 @@ import com.example.feature_card.data.util.CardStatus
 fun BankCardItem(
     card: CardDO?,
     isLoading: Boolean,
+    onClick : (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val cardBackground = when (card?.cardType) {
@@ -56,7 +58,10 @@ fun BankCardItem(
             modifier = Modifier
                 .fillMaxSize()
                 .background(cardBackground)
-                .padding(20.dp),
+                .padding(20.dp)
+                .clickable{
+                    onClick(card?.id ?:"")
+                },
             contentAlignment = Alignment.Center
         ) {
             if (isLoading) {
@@ -154,7 +159,8 @@ fun LoadingCardPreview() {
     Surface(modifier = Modifier.padding(16.dp)) {
         BankCardItem(
             card = null,
-            isLoading = true
+            isLoading = true,
+            onClick = {}
         )
     }
 }
@@ -173,7 +179,8 @@ fun VirtualCardPreview() {
                 expirationDate = "05/30",
                 currency = "AZN"
             ),
-            isLoading = false
+            isLoading = false,
+            onClick =  {}
         )
     }
 }

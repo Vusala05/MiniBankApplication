@@ -6,7 +6,7 @@ import com.example.feature_auth.domain.request.RefreshTokenRequestDO
 import com.example.feature_auth.domain.response.TokenResponseDO
 import javax.inject.Inject
 
-class GetAccessTokenUseCase @Inject constructor(
+class CheckingPinUseCase @Inject constructor(
     val authRepository: UserAuthRepository
 ) {
     suspend operator fun invoke(refreshTokenRequestDO: RefreshTokenRequestDO) : ResultWrapper<TokenResponseDO>{

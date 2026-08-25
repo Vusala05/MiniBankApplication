@@ -7,12 +7,14 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class RefreshTokenRequest(
     @SerialName("refreshToken")
-    val refreshToken: String?=null
+    val refreshToken: String?=null,
+   // val pin : String?=null
 ){
     companion object{
         fun RefreshTokenRequestDO.toEntity() : RefreshTokenRequest{
             return RefreshTokenRequest(
-                refreshToken = this.refreshToken
+                refreshToken = this.refreshToken,
+              //  pin = pin
             )
         }
     }

@@ -11,6 +11,7 @@ object TransactionContract {
     sealed interface Intent{
         data object LoadNextPage : Intent
         data object ReloadPage : Intent
+        data class LoadCardTransactions(val cardId : String?=null) : Intent
     }
 
     data class State(
@@ -20,7 +21,8 @@ object TransactionContract {
         val paginationIsFinished : Boolean = false,
         val transactionWithDay  : Map<String, List<TransactionDO>> = emptyMap(),
         val groupedTransactionList : List <GroupedTransactionList> = emptyList(),
-        val isRefreshing : Boolean = false
+        val isRefreshing : Boolean = false,
+        val currentCardId : String? = null,
     )
     const val MAX_PAGE = 20
 

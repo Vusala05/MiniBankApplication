@@ -10,15 +10,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
-fun TransactionRoute(){
+fun TransactionRoute(
+    cardId : String?=null
+){
+
     val viewModel : TransactionViewModel = hiltViewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-
-    TransactionScreen(
-        state = state,
-        handleIntent = viewModel::handleIntent
-    )
 
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest {
@@ -29,5 +27,16 @@ fun TransactionRoute(){
             }
         }
     }
+    LaunchedEffect(cardId) {
+        viewModel.handleIntent(TransactionContract.Intent.LoadCardTransactions(cardId))
+
+    }
+
+    TransactionScreen(
+        state = state,
+        handleIntent = viewModel::handleIntent
+    )
+
+
 
 }

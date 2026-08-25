@@ -1,5 +1,4 @@
-package com.example.feature_auth.domain.request
-
+package com.example.data.domain.request
 
 data class UpdateUserProfileRequestDO(
     val firstName: String?=null,

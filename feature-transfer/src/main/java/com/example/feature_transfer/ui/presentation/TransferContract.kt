@@ -23,6 +23,7 @@ object TransferContract {
         data class SelectCard (val cardId : String) : Intent
 
         data class OnClickCard (val isExpanded : Boolean, val cardSelectionType: CardSelectionType ) : Intent
+        data class GetCallBackUrlParams (val transactionId : String?, val status : String?) : Intent
 
     }
 
@@ -39,7 +40,11 @@ object TransferContract {
         val expandedBottomSheet : Boolean = false,
         val cardList: List<CardDO> = emptyList(),
         val commissionCheckingIsSuccessful : Boolean = false,
-        val cardSelectionType: CardSelectionType = CardSelectionType.NONE
+        val cardSelectionType: CardSelectionType = CardSelectionType.NONE,
+        val threeDSUrl : String?=null,
+        val callbackUrl : String?=null,
+        val transactionId : String = "",
+        val status : String = ""
     ){
         val isConfirmEnable
             get() = amount.isNotEmpty() &&

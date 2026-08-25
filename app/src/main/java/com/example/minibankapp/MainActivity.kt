@@ -10,14 +10,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.navigation.compose.rememberNavController
 import com.example.core.data.network.ApiErrorHandler
 import com.example.core.domain.useCase.HandleErrorUseCase
-import com.example.feature_auth.ui.presentation.AuthScreen
 import com.example.minibankapp.navigator.MainRoutes
 import com.example.minibankapp.navigator.RetainedNavigator
 import com.example.minibankapp.ui.theme.MiniBankAppTheme
-import dagger.hilt.EntryPoint
 import dagger.hilt.android.AndroidEntryPoint
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
 
 @AndroidEntryPoint

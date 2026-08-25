@@ -15,7 +15,11 @@ data class CommissionPreviewResponse(
     @SerialName("currency")
     val currency: String?=null,
     @SerialName("commissionRate")
-    val commissionRate: String?=null
+    val commissionRate: String?=null,
+    @SerialName("isLocal")
+    val isLocal : Boolean?=null,
+    @SerialName("requires3DS")
+    val requires3DS : Boolean?=null
 ) {
     fun toDomain() : CommissionPreviewResponseDO{
         return CommissionPreviewResponseDO(
@@ -23,7 +27,9 @@ data class CommissionPreviewResponse(
             commissionAmount = this.commissionAmount.orEmpty(),
             totalAmount = this.totalAmount.orEmpty(),
             currency = this.currency.orEmpty(),
-            commissionRate = this.commissionRate.orEmpty()
+            commissionRate = this.commissionRate.orEmpty(),
+            isLocal = this.isLocal ?:false,
+            requires3DS = this.requires3DS ?: false
         )
     }
 }
