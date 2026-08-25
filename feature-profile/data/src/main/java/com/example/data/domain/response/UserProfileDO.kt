@@ -1,6 +1,4 @@
-package com.example.feature_auth.domain.response
-
-import kotlinx.serialization.SerialName
+package com.example.data.domain.response
 
 data class UserProfileDO(
     val id: String,
@@ -8,5 +6,6 @@ data class UserProfileDO(
     val firstName: String,
     val lastName: String,
     val email: String,
-    val phoneNumber: String
+    val phoneNumber: String,
+    val hasPin : Boolean
 )

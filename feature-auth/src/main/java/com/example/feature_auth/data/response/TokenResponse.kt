@@ -11,13 +11,20 @@ data class TokenResponse(
     @SerialName("refreshToken")
     val refreshToken: String?=null,
     @SerialName("expiresIn")
-    val expiresIn: Long?=null // Duration in seconds
+    val expiresIn: Long?=null, // Duration in seconds
+    @SerialName("requiresPinSet")
+    val requiresPinSet : Boolean?=null,
+    @SerialName("isPinSet")
+    val isPinSet : Boolean?=null
+
 ){
         fun toDomain(): TokenResponseDO {
             return TokenResponseDO(
                 accessToken = this.accessToken.orEmpty(),
                 refreshToken = this.refreshToken.orEmpty(),
-                expiresIn = this.expiresIn ?: 0L
+                expiresIn = this.expiresIn ?: 0L,
+                requiresPinSet = this.requiresPinSet,
+                isPinSet = this.isPinSet
             )
         }
 

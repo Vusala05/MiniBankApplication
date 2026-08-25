@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.feature_transfer.ui.webView.WebView
 import kotlinx.coroutines.flow.collectLatest
 
 @Composable
@@ -28,4 +29,10 @@ fun TransferRoute() {
             }
         }
     }
+    WebView(
+       threeDSUrl = state.threeDSUrl,
+        onResult = { transactionId, status ->
+            viewModel.handleIntent(TransferContract.Intent.GetCallBackUrlParams(transactionId,status))
+        }
+    )
 }

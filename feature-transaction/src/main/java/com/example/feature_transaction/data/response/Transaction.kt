@@ -26,7 +26,10 @@ data class Transaction(
     @SerialName("timestamp")
     val timestamp: String?=null,        // ISO-8601 string
     @SerialName("commission")
-    val commission: String?=null
+    val commission: String?=null,
+    @SerialName("destinationPan")
+    val destinationPan : String?=null
+
 ){
     fun toDomain() : TransactionDO{
         return TransactionDO(
@@ -38,7 +41,8 @@ data class Transaction(
             status = status,
             merchantName = merchantName.orEmpty(),
             timestamp = timestamp.orEmpty(),
-            commission = commission.orEmpty()
+            commission = commission.orEmpty(),
+            destinationPan = destinationPan
         )
 
     }

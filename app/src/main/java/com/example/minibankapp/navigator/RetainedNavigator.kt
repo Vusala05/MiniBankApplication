@@ -23,9 +23,10 @@ class RetainedNavigator @Inject constructor() : Navigator  {
 
     fun navigateWithDeepLink( deepLinkNav : DeeplinkNavigator){
         when(deepLinkNav) {
-            is DeeplinkNavigator.Transfer,
-            is DeeplinkNavigator.Transaction,
-            is DeeplinkNavigator.CardsInfo -> {
+            is DeeplinkNavigator.Transaction -> {
+                navController?.navigate((deepLinkNav.routeLink + deepLinkNav.argument).toUri())
+            }
+            else -> {
                 navController?.navigate(deepLinkNav.routeLink.toUri())
             }
         }

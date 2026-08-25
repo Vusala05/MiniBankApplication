@@ -1,6 +1,6 @@
-package com.example.feature_auth.data.request
+package com.example.data.data.request
 
-import com.example.feature_auth.domain.request.UpdateUserProfileRequestDO
+import com.example.data.domain.request.UpdateUserProfileRequestDO
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

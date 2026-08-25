@@ -8,6 +8,7 @@ import com.example.feature_transaction.domain.response.TransactionDO
 import com.example.feature_transaction.domain.useCases.GetTransactionUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.launch
@@ -22,26 +23,18 @@ class TransactionViewModel @Inject constructor(
     val handleErrorUseCase: HandleErrorUseCase,
 ) : BaseViewModel<TransactionContract.State, TransactionContract.Effect>(TransactionContract.State(),handleErrorUseCase ) {
 
+    private var job : Job?=null
     init {
-        viewModelScope.launch {
-         val initialData = loadTransactions(offset = 0,userPullRequest = false)
-            if(initialData!=null){
-                updateState { it.copy(transactionList = initialData ,
-                    paginationIsFinished = initialData.size != TransactionContract.MAX_PAGE) }
-
-            }
-        }
         observeTransactionAndGrouped()
-
     }
 
     private suspend fun loadTransactions(
         offset : Int,
-        userPullRequest : Boolean,
+        userPullRequest : Boolean
     ) : List<TransactionDO>? {
-
-        updateState { it.copy(isLoading = true, isPageLoading = true) }
-        when(val res = getTransactionUseCase(offset, userPullRequest)){
+        val currentState = currentState()
+        updateState { it.copy( isLoading = true, isPageLoading = true) }
+        when(val res = getTransactionUseCase(cardId = currentState.currentCardId, offset = offset, userPullRequest = userPullRequest)){
                 is ResultWrapper.Success -> {
                      updateState{ it.copy(isLoading = false, isPageLoading = false, isRefreshing = false) }
 
@@ -67,7 +60,10 @@ class TransactionViewModel @Inject constructor(
          is TransactionContract.Intent.ReloadPage -> {
              reloadTransactions()
          }
-
+         is TransactionContract.Intent.LoadCardTransactions -> {
+             updateState { it.copy(currentCardId = intent.cardId) }
+             loadInitialData()
+         }
      }
     }
 
@@ -105,6 +101,18 @@ class TransactionViewModel @Inject constructor(
 
     private fun groupByDay( list : List<TransactionDO>) : Map<String, List<TransactionDO>>{
         return list.groupBy { it.timestamp.substring(0,10) }
+    }
+
+    private fun loadInitialData(){
+        job?.cancel()
+        job = viewModelScope.launch {
+            val initialData = loadTransactions(offset = 0,userPullRequest = false)
+            if(initialData!=null){
+                updateState { it.copy(transactionList = initialData ,
+                    paginationIsFinished = initialData.size != TransactionContract.MAX_PAGE) }
+
+            }
+        }
     }
     private fun reloadTransactions() {
             viewModelScope.launch {

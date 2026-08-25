@@ -47,6 +47,7 @@ class TransferViewModel @Inject constructor(
                     it.copy(
                         sourceCardId = intent.sourceCardId,
                         commissionPreviewResponse = null,
+                        expandedBottomSheet = false,
                         errorCode = null
                     )
                 }
@@ -57,6 +58,7 @@ class TransferViewModel @Inject constructor(
                 updateState{
                     it.copy(
                         destinationCardId = intent.destinationCardId,
+                        expandedBottomSheet = false,
                         commissionPreviewResponse = null,
                         errorCode = null
                     )
@@ -110,6 +112,14 @@ class TransferViewModel @Inject constructor(
                     }
                 }
 
+            }
+
+            is TransferContract.Intent.GetCallBackUrlParams -> {
+                val transactionId = intent.transactionId
+                val status = intent.status
+                if(transactionId!=null && status!=null){
+                    updateState { it.copy(transactionId = transactionId, status = status) }
+                }
             }
 
 
@@ -176,6 +186,9 @@ class TransferViewModel @Inject constructor(
             )) {
                 is ResultWrapper.Success -> {
                     updateState { it.copy(isLoading = false, transferResult = res.data) }
+                    if(res.data.requires3DS){
+                    updateState { it.copy(threeDSUrl = res.data.threeDSUrl, callbackUrl = res.data.callbackUrl) }
+                    }
                    // showMessage(R.string.successfully_transfer)
 
                 }

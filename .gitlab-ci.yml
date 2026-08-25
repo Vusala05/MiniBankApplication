@@ -18,15 +18,15 @@ cache:
     - .gradle/
 
 before_script:
-    - export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-    - chmod +x ./gradlew
+  - export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+  - chmod +x ./gradlew
 
 build_release_apk:
   stage: build
   tags:
     - mac
   script:
-    - base64 -d "$KEYSTORE_BASE64" > keystore.jks
+    - echo "$KEYSTORE_BASE64" | base64 -d > keystore.jks
     - export KEYSTORE_PATH="${PWD}/keystore.jks"
     - ./gradlew assembleRelease
   artifacts:
@@ -43,8 +43,7 @@ distribute_to_firebase:
   needs:
     - build_release_apk
   script:
-    - curl -sL https://firebase.tools | bash
-    - base64 -d "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
+    - echo "$FIREBASE_SERVICE_ACCOUNT" | base64 -d > firebase-service-account.json
     - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
     - CLEAN_APP_ID=$(echo "$FIREBASE_APP_ID" | tr -d '[:space:]')
     - firebase appdistribution:distribute app/build/outputs/apk/release/*.apk
@@ -52,6 +51,24 @@ distribute_to_firebase:
       --groups "Testers"
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
+
+validate_branch_name:
+  stage: validate
+  image: alpine:latest
+  tags:
+    - mac
+  before_script: []
+  script:
+    - |
+      if echo "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" | grep -Eq '^(dev|feature|tech|epic|release|bugfix|merge)/.+'; then
+        echo "The name of branch is correct: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
+      else
+        echo "ERROR: The name format is incorrect: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME'"
+        echo "Allowed formats: dev/*, feature/*, tech/*, epic/*, release/*, bugfix/*, merge/*"
+        exit 1
+      fi
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 validate_tag:
   stage: validate
@@ -82,7 +99,7 @@ build_tagged_release:
   script:
     - export APP_VERSION_NAME="${CI_COMMIT_TAG#v}"
     - export APP_VERSION_CODE="$CI_PIPELINE_IID"
-    - base64 -d "$KEYSTORE_BASE64" > keystore.jks
+    - echo "$KEYSTORE_BASE64" | base64 -d > keystore.jks
     - export KEYSTORE_PATH="${PWD}/keystore.jks"
     - ./gradlew assembleRelease
   artifacts:
@@ -99,8 +116,7 @@ distribute_tagged_release_to_firebase:
   needs:
     - build_tagged_release
   script:
-    - curl -sL https://firebase.tools | bash
-    - base64 -d "$FIREBASE_SERVICE_ACCOUNT" > firebase-service-account.json
+    - echo "$FIREBASE_SERVICE_ACCOUNT" | base64 -d > firebase-service-account.json
     - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
     - CLEAN_APP_ID=$(echo "$FIREBASE_APP_ID" | tr -d '[:space:]')
     - firebase appdistribution:distribute app/build/outputs/apk/release/*.apk

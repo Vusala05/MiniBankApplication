@@ -6,6 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
+import androidx.navigation.toRoute
 import com.example.feature_auth.ui.presentation.AuthRoute
 import com.example.feature_transaction.ui.presentation.TransactionRoute
 import com.example.feature_transfer.ui.presentation.TransferRoute
@@ -21,11 +22,18 @@ fun MainRoutes (
         retainedNavigator.navController = navController
     }
 
-    NavHost( navController = navController, startDestination = AppRoutes.UserInfo) {
+    NavHost( navController = navController, startDestination = AppRoutes.UserProfile) {
 
-        composable<AppRoutes.UserInfo>
+        composable<AppRoutes.UserAuth>
         {
             AuthRoute()
+        }
+
+        composable<AppRoutes.UserProfile>(
+            deepLinks = listOf(
+                navDeepLink { uriPattern = DeeplinkNavigator.UserProfile.routeLink })
+        ){
+            CardInfoRoute()
         }
 
 
@@ -38,9 +46,10 @@ fun MainRoutes (
 
         composable<AppRoutes.Transactions>(
             deepLinks = listOf(
-                navDeepLink { uriPattern = DeeplinkNavigator.Transaction.routeLink })
-        ){
-            TransactionRoute()
+                navDeepLink { uriPattern = "${DeeplinkNavigator.TRANSACTIONS_URL}{cardId}" })
+        ){ navStackEntry ->
+            val args = navStackEntry.toRoute<AppRoutes.Transactions>()
+            TransactionRoute(cardId = args.cardId)
         }
 
         composable<AppRoutes.Transfer>(

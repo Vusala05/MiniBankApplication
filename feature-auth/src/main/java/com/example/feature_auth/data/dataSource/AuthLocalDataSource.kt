@@ -6,12 +6,8 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.example.feature_auth.data.response.UserProfile
-import com.example.feature_auth.data.response.UserProfile.Companion.toDomain
-import com.example.feature_auth.domain.response.UserProfileDO
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -69,7 +65,7 @@ class AuthLocalDataSource @Inject constructor(
     }
 
 
-    suspend fun saveUserProfile(profile: UserProfile) {
+   /* suspend fun saveUserProfile(profile: UserProfile) {
         val jsonString = Json.encodeToString(UserProfile.serializer(), profile)
         dataStore.edit { prefs -> prefs[USER_PROFILE] = jsonString }
     }
@@ -81,7 +77,7 @@ class AuthLocalDataSource @Inject constructor(
         } catch (e: Exception) {
             null
         }
-    }
+    }*/
 
     suspend fun clearAuthData() {
         dataStore.edit { prefs -> prefs.clear() }

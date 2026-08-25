@@ -19,13 +19,13 @@ class TransactionRepositoryImpl @Inject constructor(
     val dataSource: DataSource,
     @CacheModule.LocalCacheManager val cacheManager: CacheManager
 ) : TransactionRepository {
-    override suspend fun getTransaction(offset : Int, userPullRequest : Boolean): ResultWrapper<List<TransactionDO>> {
+    override suspend fun getTransaction(cardId : String?, offset : Int, userPullRequest : Boolean): ResultWrapper<List<TransactionDO>> {
         val transactionData = if(!userPullRequest) cacheManager.getAndConvertToModel< List<TransactionDO>>("${TRANSACTION_KEY}_$offset") else null
         if(transactionData!=null){
             return ResultWrapper.Success(data = transactionData)
         }
         return handleResultWrapper(result = apiCallingHandler(globalNetwork = globalNetwork){
-            dataSource.getTransactions(offset = offset)
+            dataSource.getTransactions(cardId,offset = offset)
         }){ result ->
             result?.map{it.toDomain()}.orEmpty().also {
                 if (userPullRequest){

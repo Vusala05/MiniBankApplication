@@ -10,7 +10,8 @@ interface DataSource {
 
     @GET("transactions")
     suspend fun getTransactions(
+        @Query("cardId") cardId: String?=null,
         @Query("limit") limit: Int = 20,
-        @Query(/* value = */ "offset") offset: Int = 0
+        @Query("offset") offset: Int = 0,
     ): Response<BaseResponse<List<Transaction>>>
 }
