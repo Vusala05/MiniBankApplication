@@ -170,7 +170,8 @@ validate_mr_target:
       else
         echo "Feature key check skipped (target is '$TARGET_PREFIX/*', not feature/tech/epic)."
       fi
-
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 
 validate_tag:
