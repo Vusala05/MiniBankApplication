@@ -199,7 +199,7 @@ validate_tag:
       git fetch origin --prune 2>/dev/null || true
       git fetch "$CI_REPOSITORY_URL" '+refs/heads/*:refs/remotes/origin/*' 2>/dev/null || true
 
-      CONTAINING_BRANCHES=$(git branch -r --contains "$CI_COMMIT_SHA" 2>/dev/null | sed 's/origin\///' | sed 's/^[* ]*//')
+      CONTAINING_BRANCHES=$(git branch -r --points-at "$CI_COMMIT_SHA" 2>/dev/null | sed 's/origin\///' | sed 's/^[* ]*//')
 
       echo "Branches containing this commit:"
       echo "$CONTAINING_BRANCHES"
