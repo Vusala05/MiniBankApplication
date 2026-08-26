@@ -33,7 +33,9 @@ class TransferViewModel @Inject constructor(
 ) : BaseViewModel<TransferContract.State, TransferContract.Effect>(TransferContract.State(), handleErrorUseCase) {
 
     private val amountFlow = MutableStateFlow("")
-
+init {
+    print("fejfbwejbj")
+}
 
     fun handleIntent(intent: TransferContract.Intent) {
         when (intent) {
