@@ -87,6 +87,7 @@ validate_mr_target:
 
       is_allowed=1
 
+      # Universal rule: only release/* can target master, regardless of source
       if [ "$TARGET" == "master" ] || [ "$TARGET" == "main" ]; then
         if [ "$SOURCE_PREFIX" == "release" ]; then
           is_allowed=0
@@ -102,7 +103,14 @@ validate_mr_target:
             ;;
           tech)
             case "$TARGET_PREFIX" in
-              epic|release) is_allowed=0 ;;
+              epic|release)
+                is_allowed=0
+                ;;
+              tech|feature)
+                echo "WARNING: MR from 'tech/*' to '$TARGET_PREFIX/*' is a special-case flow (e.g. version bump by CL)."
+                echo "WARNING: This is normally disallowed — please make sure this MR is reviewed and approved carefully."
+                is_allowed=0
+                ;;
             esac
             ;;
           dev)
@@ -131,21 +139,40 @@ validate_mr_target:
         echo ""
         echo "Allowed MR target rules:"
         echo "  feature/* -> epic/*, release/*"
-        echo "  tech/*    -> epic/*, release/*"
+        echo "  tech/*    -> epic/*, release/* (tech/*, feature/* allowed with warning)"
         echo "  dev/*     -> feature/*, tech/*"
         echo "  bugfix/*  -> feature/*, tech/*, epic/*, release/*"
         echo "  merge/*   -> feature/*, tech/*, epic/*, release/*"
         echo "  master    -> only from release/*"
-        echo ""
-        echo "Explicitly disallowed flows:"
-        echo "  feature/* -> feature/*, feature/* -> tech/*"
-        echo "  tech/*    -> tech/*, tech/* -> feature/*"
         exit 1
       fi
 
       echo "MR target is valid: $SOURCE -> $TARGET"
+       # ------ Key matching check 
+      if [ "$TARGET_PREFIX" == "feature" ] || [ "$TARGET_PREFIX" == "tech" ] || [ "$TARGET_PREFIX" == "epic" ]; then
+        SOURCE_REST="${SOURCE#*/}"
+        TARGET_REST="${TARGET#*/}"
+        SOURCE_KEY="${SOURCE_REST%%-*}"
+        TARGET_KEY="${TARGET_REST%%-*}"
+
+        echo "Source feature key: $SOURCE_KEY"
+        echo "Target feature key: $TARGET_KEY"
+
+        if [ "$SOURCE_KEY" != "$TARGET_KEY" ]; then
+          echo "ERROR: Feature key mismatch!"
+          echo "Source '$SOURCE' belongs to feature '$SOURCE_KEY'"
+          echo "Target '$TARGET' belongs to feature '$TARGET_KEY'"
+          echo "You seem to be merging into an unrelated branch."
+          exit 1
+        fi
+
+        echo "Feature key match: $SOURCE_KEY"
+      else
+        echo "Feature key check skipped (target is '$TARGET_PREFIX/*', not feature/tech/epic)."
+      fi
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
 
 validate_tag:
   stage: validate
