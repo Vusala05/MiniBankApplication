@@ -42,7 +42,8 @@ class SessionTokenRefreshImpl @Inject constructor(
 
 
             val result = getAccessTokenUseCase(RefreshTokenRequestDO(
-                refreshToken = authLocalDataSource.getRefreshToken()
+                refreshToken = authLocalDataSource.getRefreshToken(),
+                pin = "1234"
             ))
             when(result){
                 is ResultWrapper.Success -> {

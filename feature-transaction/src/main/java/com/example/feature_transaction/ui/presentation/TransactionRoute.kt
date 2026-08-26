@@ -18,6 +18,10 @@ fun TransactionRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
+    LaunchedEffect(cardId) {
+        viewModel.handleIntent(TransactionContract.Intent.LoadCardTransactions(cardId))
+
+    }
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest {
             when (it) {
@@ -27,10 +31,7 @@ fun TransactionRoute(
             }
         }
     }
-    LaunchedEffect(cardId) {
-        viewModel.handleIntent(TransactionContract.Intent.LoadCardTransactions(cardId))
 
-    }
 
     TransactionScreen(
         state = state,

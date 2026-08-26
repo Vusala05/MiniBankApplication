@@ -23,18 +23,18 @@ class TransactionViewModel @Inject constructor(
     val handleErrorUseCase: HandleErrorUseCase,
 ) : BaseViewModel<TransactionContract.State, TransactionContract.Effect>(TransactionContract.State(),handleErrorUseCase ) {
 
-    private var job : Job?=null
+   // private var job : Job?=null
     init {
         observeTransactionAndGrouped()
     }
 
     private suspend fun loadTransactions(
+        cardId : String?,
         offset : Int,
         userPullRequest : Boolean
     ) : List<TransactionDO>? {
-        val currentState = currentState()
         updateState { it.copy( isLoading = true, isPageLoading = true) }
-        when(val res = getTransactionUseCase(cardId = currentState.currentCardId, offset = offset, userPullRequest = userPullRequest)){
+        when(val res = getTransactionUseCase(cardId = cardId, offset = offset, userPullRequest = userPullRequest)){
                 is ResultWrapper.Success -> {
                      updateState{ it.copy(isLoading = false, isPageLoading = false, isRefreshing = false) }
 
@@ -62,7 +62,7 @@ class TransactionViewModel @Inject constructor(
          }
          is TransactionContract.Intent.LoadCardTransactions -> {
              updateState { it.copy(currentCardId = intent.cardId) }
-             loadInitialData()
+             loadInitialData(intent.cardId)
          }
      }
     }
@@ -81,6 +81,7 @@ class TransactionViewModel @Inject constructor(
                     return@withLock
                 }
                 val newTransactionList = loadTransactions(
+                    cardId = afterState.currentCardId,
                     offset = afterState.transactionList.size,
                     userPullRequest = false
                 )
@@ -103,10 +104,9 @@ class TransactionViewModel @Inject constructor(
         return list.groupBy { it.timestamp.substring(0,10) }
     }
 
-    private fun loadInitialData(){
-        job?.cancel()
-        job = viewModelScope.launch {
-            val initialData = loadTransactions(offset = 0,userPullRequest = false)
+    private fun loadInitialData(cardId : String?){
+        viewModelScope.launch {
+            val initialData = loadTransactions(cardId = cardId, offset = 0,userPullRequest = false)
             if(initialData!=null){
                 updateState { it.copy(transactionList = initialData ,
                     paginationIsFinished = initialData.size != TransactionContract.MAX_PAGE) }
@@ -118,7 +118,8 @@ class TransactionViewModel @Inject constructor(
             viewModelScope.launch {
                 updateState { it.copy(isRefreshing = true) }
                 pagingMutex.withLock {
-                val refreshedTransactions = loadTransactions(offset = 0, userPullRequest = true)
+                    val currentStat = currentState()
+                val refreshedTransactions = loadTransactions(cardId = currentStat.currentCardId,offset = 0, userPullRequest = true)
                     if(refreshedTransactions!=null) {
                         updateState {
                             it.copy(
