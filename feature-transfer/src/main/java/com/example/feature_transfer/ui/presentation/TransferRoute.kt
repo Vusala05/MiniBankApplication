@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun TransferRoute() {
-   val viewModel : TransferViewModel = hiltViewModel()
+    val viewModel: TransferViewModel = hiltViewModel()
     val context = LocalContext.current
 
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -22,17 +22,26 @@ fun TransferRoute() {
     )
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest {
-            when(it){
+            when (it) {
                 is TransferContract.Effect.ShowMessage -> {
-                    Toast.makeText(context,it.message, Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, it.message, Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
-    WebView(
-       threeDSUrl = state.threeDSUrl,
-        onResult = { transactionId, status ->
-            viewModel.handleIntent(TransferContract.Intent.GetCallBackUrlParams(transactionId,status))
-        }
-    )
+    if (!state.threeDSUrl.isNullOrEmpty()) {
+
+        WebView(
+            threeDSUrl = state.threeDSUrl,
+            onResult = { transactionId, status ->
+                viewModel.handleIntent(
+                    TransferContract.Intent.GetCallBackUrlParams(
+                        transactionId,
+                        status
+                    )
+                )
+            }
+        )
+
+    }
 }

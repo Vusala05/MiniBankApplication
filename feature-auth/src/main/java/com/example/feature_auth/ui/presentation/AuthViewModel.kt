@@ -1,3 +1,4 @@
+/*
 package com.example.feature_auth.ui.presentation
 
 import androidx.lifecycle.viewModelScope
@@ -45,7 +46,7 @@ class AuthViewModel @Inject constructor(
                          delay(2000)
                          when(val res = checkingPinUseCase(RefreshTokenRequestDO(
                              refreshToken = authLocalDataSource.getRefreshToken(),
-                             //pin = newPin
+                             pin = newPin
                              )))
                          {
                              is ResultWrapper.Success -> {
@@ -84,4 +85,4 @@ class AuthViewModel @Inject constructor(
     }
 
 
-}
+}*/

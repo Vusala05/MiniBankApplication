@@ -69,6 +69,83 @@ validate_branch_name:
       fi
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+validate_mr_target:
+  stage: validate
+  image: alpine:latest
+  tags:
+    - mac
+  before_script: []
+  script:
+    - |
+      SOURCE="$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
+      TARGET="$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+      SOURCE_PREFIX="${SOURCE%%/*}"
+      TARGET_PREFIX="${TARGET%%/*}"
+
+      echo "Source branch: $SOURCE (prefix: $SOURCE_PREFIX)"
+      echo "Target branch: $TARGET (prefix: $TARGET_PREFIX)"
+
+      is_allowed=1
+
+      if [ "$TARGET" == "master" ] || [ "$TARGET" == "main" ]; then
+        if [ "$SOURCE_PREFIX" == "release" ]; then
+          is_allowed=0
+        else
+          is_allowed=1
+        fi
+      else
+        case "$SOURCE_PREFIX" in
+          feature)
+            case "$TARGET_PREFIX" in
+              epic|release) is_allowed=0 ;;
+            esac
+            ;;
+          tech)
+            case "$TARGET_PREFIX" in
+              epic|release) is_allowed=0 ;;
+            esac
+            ;;
+          dev)
+            case "$TARGET_PREFIX" in
+              feature|tech) is_allowed=0 ;;
+            esac
+            ;;
+          bugfix)
+            case "$TARGET_PREFIX" in
+              feature|tech|epic|release) is_allowed=0 ;;
+            esac
+            ;;
+          merge)
+            case "$TARGET_PREFIX" in
+              feature|tech|epic|release) is_allowed=0 ;;
+            esac
+            ;;
+          *)
+            echo "WARNING: No rule defined for source prefix '$SOURCE_PREFIX'. Please review branching rules."
+            ;;
+        esac
+      fi
+
+      if [ "$is_allowed" -ne 0 ]; then
+        echo "ERROR: MR from '$SOURCE' (prefix: $SOURCE_PREFIX) to '$TARGET' (prefix: $TARGET_PREFIX) is NOT allowed."
+        echo ""
+        echo "Allowed MR target rules:"
+        echo "  feature/* -> epic/*, release/*"
+        echo "  tech/*    -> epic/*, release/*"
+        echo "  dev/*     -> feature/*, tech/*"
+        echo "  bugfix/*  -> feature/*, tech/*, epic/*, release/*"
+        echo "  merge/*   -> feature/*, tech/*, epic/*, release/*"
+        echo "  master    -> only from release/*"
+        echo ""
+        echo "Explicitly disallowed flows:"
+        echo "  feature/* -> feature/*, feature/* -> tech/*"
+        echo "  tech/*    -> tech/*, tech/* -> feature/*"
+        exit 1
+      fi
+
+      echo "MR target is valid: $SOURCE -> $TARGET"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 validate_tag:
   stage: validate
