@@ -1,74 +1,3 @@
-image: eclipse-temurin:17-jdk
-
-stages:
-  - validate
-  - build
-  - distribute
-
-variables:
-  ANDROID_COMPILE_SDK: "34"
-  ANDROID_BUILD_TOOLS: "34.0.0"
-  ANDROID_SDK_TOOLS: "10406996"
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false"
-
-cache:
-  key: android-sdk-cache
-  paths:
-    - android-sdk-root/
-    - .gradle/
-
-before_script:
-  - export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-  - chmod +x ./gradlew
-
-build_release_apk:
-  stage: build
-  tags:
-    - mac
-  script:
-    - echo "$KEYSTORE_BASE64" | base64 -d > keystore.jks
-    - export KEYSTORE_PATH="${PWD}/keystore.jks"
-    - ./gradlew assembleRelease
-  artifacts:
-    paths:
-      - app/build/outputs/apk/release/*.apk
-    expire_in: 30 days
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
-
-distribute_to_firebase:
-  stage: distribute
-  tags:
-    - mac
-  needs:
-    - build_release_apk
-  script:
-    - echo "$FIREBASE_SERVICE_ACCOUNT" | base64 -d > firebase-service-account.json
-    - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
-    - CLEAN_APP_ID=$(echo "$FIREBASE_APP_ID" | tr -d '[:space:]')
-    - firebase appdistribution:distribute app/build/outputs/apk/release/*.apk
-      --app "$CLEAN_APP_ID"
-      --groups "Testers"
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
-
-validate_branch_name:
-  stage: validate
-  image: alpine:latest
-  tags:
-    - mac
-  before_script: []
-  script:
-    - |
-      if echo "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" | grep -Eq '^(dev|feature|tech|epic|release|bugfix|merge)/.+'; then
-        echo "The name of branch is correct: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
-      else
-        echo "ERROR: The name format is incorrect: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME'"
-        echo "Allowed formats: dev/*, feature/*, tech/*, epic/*, release/*, bugfix/*, merge/*"
-        exit 1
-      fi
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 validate_mr_target:
   stage: validate
   image: alpine:latest
@@ -87,6 +16,7 @@ validate_mr_target:
 
       is_allowed=1
 
+      
       if [ "$TARGET" == "master" ] || [ "$TARGET" == "main" ]; then
         if [ "$SOURCE_PREFIX" == "release" ]; then
           is_allowed=0
@@ -102,7 +32,14 @@ validate_mr_target:
             ;;
           tech)
             case "$TARGET_PREFIX" in
-              epic|release) is_allowed=0 ;;
+              epic|release)
+                is_allowed=0
+                ;;
+              tech|feature)
+                echo "WARNING: MR from 'tech/*' to '$TARGET_PREFIX/*' is a special-case flow (e.g. version bump by CL)."
+                echo "WARNING: This is normally disallowed — please make sure this MR is reviewed and approved carefully."
+                is_allowed=0
+                ;;
             esac
             ;;
           dev)
@@ -131,74 +68,35 @@ validate_mr_target:
         echo ""
         echo "Allowed MR target rules:"
         echo "  feature/* -> epic/*, release/*"
-        echo "  tech/*    -> epic/*, release/*"
+        echo "  tech/*    -> epic/*, release/* (tech/*, feature/* allowed with warning)"
         echo "  dev/*     -> feature/*, tech/*"
         echo "  bugfix/*  -> feature/*, tech/*, epic/*, release/*"
         echo "  merge/*   -> feature/*, tech/*, epic/*, release/*"
         echo "  master    -> only from release/*"
-        echo ""
-        echo "Explicitly disallowed flows:"
-        echo "  feature/* -> feature/*, feature/* -> tech/*"
-        echo "  tech/*    -> tech/*, tech/* -> feature/*"
         exit 1
       fi
 
       echo "MR target is valid: $SOURCE -> $TARGET"
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+       # ------ Key matching check 
+      if [ "$TARGET_PREFIX" == "feature" ] || [ "$TARGET_PREFIX" == "tech" ] || [ "$TARGET_PREFIX" == "epic" ]; then
+        SOURCE_REST="${SOURCE#*/}"
+        TARGET_REST="${TARGET#*/}"
+        SOURCE_KEY="${SOURCE_REST%%-*}"
+        TARGET_KEY="${TARGET_REST%%-*}"
 
-validate_tag:
-  stage: validate
-  image: alpine:latest
-  tags:
-    - mac
-  before_script: []
-  script:
-    - |
-      if echo "$CI_COMMIT_TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
-        echo "Tag is valid (Release Candidate format): $CI_COMMIT_TAG"
-      elif echo "$CI_COMMIT_TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
-        echo "Tag is valid (Final Release format): $CI_COMMIT_TAG"
+        echo "Source feature key: $SOURCE_KEY"
+        echo "Target feature key: $TARGET_KEY"
+
+        if [ "$SOURCE_KEY" != "$TARGET_KEY" ]; then
+          echo "ERROR: Feature key mismatch!"
+          echo "Source '$SOURCE' belongs to feature '$SOURCE_KEY'"
+          echo "Target '$TARGET' belongs to feature '$TARGET_KEY'"
+          echo "You seem to be merging into an unrelated branch."
+          exit 1
+        fi
+
+        echo "Feature key match: $SOURCE_KEY"
       else
-        echo "Error: Tag format is not valid: '$CI_COMMIT_TAG'"
-        echo "Correct formats: v1.0.0 (release candidate) or v1.0.0.1 (final release)"
-        exit 1
+        echo "Feature key check skipped (target is '$TARGET_PREFIX/*', not feature/tech/epic)."
       fi
-  rules:
-    - if: '$CI_COMMIT_TAG'
 
-build_tagged_release:
-  stage: build
-  tags:
-    - mac
-  needs:
-    - validate_tag
-  script:
-    - export APP_VERSION_NAME="${CI_COMMIT_TAG#v}"
-    - export APP_VERSION_CODE="$CI_PIPELINE_IID"
-    - echo "$KEYSTORE_BASE64" | base64 -d > keystore.jks
-    - export KEYSTORE_PATH="${PWD}/keystore.jks"
-    - ./gradlew assembleRelease
-  artifacts:
-    paths:
-      - app/build/outputs/apk/release/*.apk
-    expire_in: 90 days
-  rules:
-    - if: '$CI_COMMIT_TAG'
-
-distribute_tagged_release_to_firebase:
-  stage: distribute
-  tags:
-    - mac
-  needs:
-    - build_tagged_release
-  script:
-    - echo "$FIREBASE_SERVICE_ACCOUNT" | base64 -d > firebase-service-account.json
-    - export GOOGLE_APPLICATION_CREDENTIALS="${PWD}/firebase-service-account.json"
-    - CLEAN_APP_ID=$(echo "$FIREBASE_APP_ID" | tr -d '[:space:]')
-    - firebase appdistribution:distribute app/build/outputs/apk/release/*.apk
-      --app "$CLEAN_APP_ID"
-      --groups "Testers"
-      --release-notes "Release ${CI_COMMIT_TAG}"
-  rules:
-    - if: '$CI_COMMIT_TAG'
