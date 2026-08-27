@@ -12,6 +12,7 @@ import com.example.feature_transfer.domain.request.TransferRequestDO
 import com.example.feature_transfer.domain.useCases.CalculateCommissionUseCase
 import com.example.feature_transfer.domain.useCases.ExecuteTransferUseCase
 import com.example.feature_transfer.ui.util.CardSelectionType
+import com.example.feature_transfer.ui.util.TransferType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -33,9 +34,6 @@ class TransferViewModel @Inject constructor(
 ) : BaseViewModel<TransferContract.State, TransferContract.Effect>(TransferContract.State(), handleErrorUseCase) {
 
     private val amountFlow = MutableStateFlow("")
-init {
-    print("fejfbwejbj")
-}
 
     fun handleIntent(intent: TransferContract.Intent) {
         when (intent) {
@@ -44,10 +42,10 @@ init {
                 amountFlow.value = intent.amount
             }
 
-            is TransferContract.Intent.SourceCardIdChange -> {
+            is TransferContract.Intent.SourceCardChange -> {
                 updateState {
                     it.copy(
-                        sourceCardId = intent.sourceCardId,
+                        sourceCard = intent.sourceCard,
                         commissionPreviewResponse = null,
                         expandedBottomSheet = false,
                         errorCode = null
@@ -56,10 +54,10 @@ init {
 
             }
 
-            is TransferContract.Intent.DestinationCardIdChange -> {
+            is TransferContract.Intent.DestinationCardChange -> {
                 updateState{
                     it.copy(
-                        destinationCardId = intent.destinationCardId,
+                        destinationCard = intent.destinationCard,
                         expandedBottomSheet = false,
                         commissionPreviewResponse = null,
                         errorCode = null
@@ -104,23 +102,30 @@ init {
 
             is TransferContract.Intent.SelectCard -> {
                 val currentState = currentState()
-                val selectedCard = currentState.cardList.find { it.id == intent.cardId }
+                val selectedCard = currentState.cardList.find { it.id == intent.card.id }
                 updateState { it.copy(currency = selectedCard?.currency ?: it.currency) }
                 updateState { current ->
                     when (current.cardSelectionType) {
-                        CardSelectionType.SOURCE_CARD_ID -> current.copy(sourceCardId = intent.cardId)
-                        CardSelectionType.DESTINATION_CARD_ID -> current.copy(destinationCardId = intent.cardId)
+                        CardSelectionType.SOURCE_CARD_ID -> current.copy(sourceCard = intent.card)
+                        CardSelectionType.DESTINATION_CARD_ID -> current.copy(destinationCard = intent.card)
                         CardSelectionType.NONE -> current
                     }
                 }
 
+            }
+            is TransferContract.Intent.DestinationPanChanged -> {
+                  updateState { it.copy(destinationPan = intent.destinationPanId)}
+            }
+
+            is TransferContract.Intent.GetTransferType -> {
+                   updateState { it.copy(transferType = intent.transferType)}
             }
 
             is TransferContract.Intent.GetCallBackUrlParams -> {
                 val transactionId = intent.transactionId
                 val status = intent.status
                 if(transactionId!=null && status!=null){
-                    updateState { it.copy(transactionId = transactionId, status = status) }
+                    updateState { it.copy(threeDSUrl = null,transactionId = transactionId, status = status) }
                 }
             }
 
@@ -141,8 +146,9 @@ init {
             val currentState = currentState()
             when (val res = calculateCommissionUseCase(
                 CalculateCommissionRequestDO(
-                    sourceCardId = currentState.sourceCardId,
-                    destinationCardId = currentState.destinationCardId,
+                    sourceCardId = currentState.sourceCard?.id ?:"",
+                    destinationCardId = if(currentState.transferType == TransferType.BETWEEN_OWN_CARD) currentState.destinationCard?.id else null,
+                    destinationPan = if(currentState.transferType == TransferType.BETWEEN_OTHER_CARD) currentState.destinationPan else null ,
                     amount = amount,
                     currency = currentState.currency
                 )
@@ -180,8 +186,9 @@ init {
             updateState { it.copy(isLoading = true) }
             when (val res = executeTransferUseCase(
                 TransferRequestDO(
-                    sourceCardId = currentState.sourceCardId,
-                    destinationCardId = currentState.destinationCardId,
+                    sourceCardId = currentState.sourceCard?.id ?:"",
+                    destinationCardId = if(currentState.transferType == TransferType.BETWEEN_OWN_CARD) currentState.destinationCard?.id else null,
+                    destinationPan = if(currentState.transferType == TransferType.BETWEEN_OTHER_CARD) currentState.destinationPan else null ,
                     amount = currentState.amount,
                     currency = currentState.currency
                 )
@@ -189,7 +196,7 @@ init {
                 is ResultWrapper.Success -> {
                     updateState { it.copy(isLoading = false, transferResult = res.data) }
                     if(res.data.requires3DS){
-                    updateState { it.copy(threeDSUrl = res.data.threeDSUrl, callbackUrl = res.data.callbackUrl) }
+                    updateState { it.copy(threeDSUrl = res.data.threeDSUrl?.replace("localhost:8080", "10.0.2.2:9090"), callbackUrl = res.data.callbackUrl) }
                     }
                    // showMessage(R.string.successfully_transfer)
 
