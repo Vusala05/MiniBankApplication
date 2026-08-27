@@ -20,7 +20,7 @@ class TransactionRepositoryImpl @Inject constructor(
     @CacheModule.LocalCacheManager val cacheManager: CacheManager
 ) : TransactionRepository {
     override suspend fun getTransaction(cardId : String?, offset : Int, userPullRequest : Boolean): ResultWrapper<List<TransactionDO>> {
-        val transactionData = if(!userPullRequest) cacheManager.getAndConvertToModel< List<TransactionDO>>("${TRANSACTION_KEY}_$offset") else null
+        val transactionData = if(!userPullRequest) cacheManager.getAndConvertToModel< List<TransactionDO>>("${TRANSACTION_KEY}_${cardId}_$offset") else null
         if(transactionData!=null){
             return ResultWrapper.Success(data = transactionData)
         }
@@ -29,9 +29,9 @@ class TransactionRepositoryImpl @Inject constructor(
         }){ result ->
             result?.map{it.toDomain()}.orEmpty().also {
                 if (userPullRequest){
-                    cacheManager.invalidateGroupKey(TRANSACTION_KEY)
+                    cacheManager.invalidateGroupKey("${TRANSACTION_KEY}_$cardId")
                 }
-                cacheManager.writeAndConvertToJson(key = "${TRANSACTION_KEY}_$offset", groupKey = TRANSACTION_KEY ,it,2.minutes.inWholeMilliseconds)
+                cacheManager.writeAndConvertToJson(key = "${TRANSACTION_KEY}_${cardId}_$offset", groupKey = "${TRANSACTION_KEY}_$cardId" ,it,2.minutes.inWholeMilliseconds)
             }
         }
     }
