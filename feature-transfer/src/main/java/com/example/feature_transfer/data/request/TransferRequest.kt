@@ -8,6 +8,8 @@ data class TransferRequest(
     @SerialName("sourceCardId")
     val sourceCardId: String?=null,
     @SerialName("destinationCardId")
+    val destinationCardId : String?=null,
+    @SerialName("destinationPan")
     val destinationPan: String?=null,
     @SerialName("amount")
     val amount: String?=null,
