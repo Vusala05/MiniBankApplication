@@ -4,5 +4,6 @@ enum class TransactionStatus {
     PENDING,
     COMPLETED,
     FAILED,
+    PENDING_3DS,
     UNKNOWN
 }
