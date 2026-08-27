@@ -27,7 +27,7 @@ import com.example.feature_card.data.util.CardStatus
 
 @Composable
 fun BottomSheetItem(
-    onCardClick : (String) -> Unit,
+    onCardClick : (CardDO) -> Unit,
     isSelected : Boolean,
     card : CardDO,
     modifier: Modifier = Modifier
@@ -40,7 +40,7 @@ fun BottomSheetItem(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onCardClick(card.id) },
+            .clickable { onCardClick(card) },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = cardColor,
@@ -83,7 +83,7 @@ fun BottomSheetItem(
 
             RadioButton(
                 selected = isSelected,
-                onClick = { onCardClick(card.id) },
+                onClick = { onCardClick(card) },
                 colors = RadioButtonDefaults.colors(
                     selectedColor = Color.Red
                 )
