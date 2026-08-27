@@ -42,8 +42,8 @@ fun  BottomSheetIContent(
                 key = { card -> card.id }
             ) { card ->
                 val isSelected = when(state.cardSelectionType){
-                    CardSelectionType.SOURCE_CARD_ID -> { card.id == state.sourceCardId}
-                    CardSelectionType.DESTINATION_CARD_ID -> {card.id == state.destinationCardId}
+                    CardSelectionType.SOURCE_CARD_ID -> { card.id == state.sourceCard?.id}
+                    CardSelectionType.DESTINATION_CARD_ID -> {card.id == state.destinationCard?.id}
                     CardSelectionType.NONE -> false
                 }
                 BottomSheetItem(
