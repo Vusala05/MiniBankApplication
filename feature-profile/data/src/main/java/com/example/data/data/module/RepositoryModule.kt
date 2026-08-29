@@ -1,4 +1,4 @@
-package com.example.data.data.module
+package com.example.feature_profile.data.module
 
 import com.example.data.data.repositoryImpl.ProfileRepository
 import com.example.data.domain.repository.ProfileRepositoryImpl

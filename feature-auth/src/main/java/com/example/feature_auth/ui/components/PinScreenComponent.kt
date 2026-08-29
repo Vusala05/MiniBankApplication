@@ -6,16 +6,19 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,15 +29,21 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.feature_auth.ui.presentation.AuthContract
 
 @Composable
-fun InitialPinSetScreen(
+fun PinScreenComponent(
+    pinStepTitle: String,
+    pinStepDescription: String,
+    pinError: String,
     state: AuthContract.State,
     onPinChange: (String) -> Unit,
+    onContinueClick: () -> Unit, // Klik Hadisəsi əlavə olundu
     modifier: Modifier = Modifier
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -43,27 +52,35 @@ fun InitialPinSetScreen(
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
+
     Column(
-        modifier = modifier.fillMaxSize(), verticalArrangement = Arrangement.Center,
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.height(32.dp))
 
         Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = "New Pin",
-            color = Color.Black,
-            textAlign = TextAlign.Center
+            text = pinStepTitle,
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF0F172A),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
-        Spacer(modifier = Modifier.height(10.dp))
+
+        Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = "Set New Pin",
-            color = Color.Black,
-            textAlign = TextAlign.Center
+            text = pinStepDescription,
+            fontSize = 14.sp,
+            color = Color(0xFF64748B),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(5.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         BasicTextField(
             value = state.currentPin,
@@ -81,12 +98,13 @@ fun InitialPinSetScreen(
                 .clickable {
                     focusRequester.requestFocus()
                     keyboardController?.show()
-                }
-                .align(Alignment.CenterHorizontally),
+                },
             contentAlignment = Alignment.Center
         ) {
-            PinCircles(filledCount = state.currentPinLength )
+            PinCircles(filledCount = state.currentPinLength)
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         AnimatedVisibility(
             visible = state.showPinError,
@@ -94,13 +112,32 @@ fun InitialPinSetScreen(
             exit = fadeOut() + slideOutVertically(targetOffsetY = { -20 })
         ) {
             Text(
-                text = "Set Pin Again!!!",
-                color = Color.Red,
+                text = pinError,
+                color = Color(0xFFEF4444),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
                 textAlign = TextAlign.Center
             )
         }
 
         Spacer(modifier = Modifier.weight(1f))
-    }
 
+        Button(
+            onClick = onContinueClick,
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF2563EB),
+                contentColor = Color.White
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+        ) {
+            Text(
+                text = "Continue",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+    }
 }

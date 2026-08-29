@@ -14,6 +14,25 @@
     <string name="network_unknown_error">An unknown error occurred on the system</string>
     <string name="mapping_error">Internal Mapping Error Occur</string>
     <string name="successfully_transfer">Mission Successfully Completed!</string>
+    <string name="refresh_token_expired">Your session has expired. Please log in again with your PIN</string>
+    <string name="InvalidPanException">The card number you entered is invalid. Please check it and try again</string>
+    <string name="PinSetupRequiredException">Please set up a 4-digit PIN to continue</string>
+    <string name="InvalidPinException">The PIN you entered is incorrect. Please try again</string>
+    <string name="PinRequiredException">Please enter your PIN to continue</string>
+    <string name="TransactionNotFoundException">This transaction could not be found or has already been completed</string>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

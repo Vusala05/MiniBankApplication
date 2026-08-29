@@ -1,6 +1,8 @@
-package com.example.core.data.module
+package com.example.feature_auth.data.module
 
 import com.example.core.data.interceptor.TokenInterceptor
+import com.example.core.data.module.NetworkModule
+import com.example.feature_auth.data.helper.SessionAuthenticator
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
@@ -14,50 +16,33 @@ import retrofit2.Retrofit
 import javax.inject.Named
 import javax.inject.Singleton
 
-@Module
+@Module(includes = [NetworkModule::class])
 @InstallIn(SingletonComponent::class)
-object NetworkModule {
+object AuthNetworkModule {
 
     @Provides
     @Singleton
-    @Named("Main-interceptor")
-    fun provideHttpLogInterceptor(): HttpLoggingInterceptor {
-        return HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
-        }
-    }
-
-    @Provides
-    @Singleton
-    @Named("Main-Client")
-    fun provideOkHttpClient(
-        @Named("Main-interceptor") loggingInterceptor: HttpLoggingInterceptor,
-        tokenInterceptor: TokenInterceptor
+    @Named("Client")
+    fun provideMainOkHttpClient(
+        @Named("Main-interceptor") loggingInterceptor: HttpLoggingInterceptor,   // <-- düzəliş
+        tokenInterceptor: TokenInterceptor,
+        sessionAuthenticator: SessionAuthenticator
     ): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .addInterceptor(tokenInterceptor)
+            .authenticator(sessionAuthenticator)
             .build()
     }
 
     @Provides
     @Singleton
-    fun provideJson(): Json {
-        return Json {
-            ignoreUnknownKeys = true
-            isLenient = true
-        }
-    }
-
-    @Provides
-    @Singleton
-    @Named("Main-Retrofit")
+    @Named("Retrofit")
     fun provideRetrofit(
-        @Named("Main-Client") okHttpClient: OkHttpClient,
+        @Named("Client") okHttpClient: OkHttpClient,
         json: Json
     ): Retrofit {
         val contentType = "application/json".toMediaType()
-
         return Retrofit.Builder()
             .baseUrl("http://10.0.2.2:9090/api/v1/")
             .client(okHttpClient)

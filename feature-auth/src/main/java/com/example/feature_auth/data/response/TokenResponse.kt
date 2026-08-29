@@ -11,7 +11,7 @@ data class TokenResponse(
     @SerialName("refreshToken")
     val refreshToken: String?=null,
     @SerialName("expiresIn")
-    val expiresIn: Long?=null, // Duration in seconds
+    val expiresIn: Long?=null,
     @SerialName("requiresPinSet")
     val requiresPinSet : Boolean?=null,
     @SerialName("isPinSet")
