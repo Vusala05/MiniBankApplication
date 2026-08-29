@@ -1,8 +1,15 @@
-package com.example.core.data.network
+package com.example.feature_auth.data.helper
 
+import android.content.Context
+import android.content.Intent
 import com.example.core.data.interceptor.TokenInterceptor
+import com.example.core.domain.feature.PinFlowChannel
+import com.example.core.domain.feature.RefreshedResult
 import com.example.core.domain.feature.SessionTokenRefresher
+import com.example.feature_auth.ui.PinActivity
+import com.example.feature_auth.ui.util.PinStep
 import dagger.Lazy
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Request
@@ -14,7 +21,9 @@ import javax.inject.Singleton
 @Singleton
 class SessionAuthenticator @Inject constructor(
     val sessionTokenRefresher: Lazy<SessionTokenRefresher>,
-    val tokenInterceptor: TokenInterceptor
+    val tokenInterceptor: TokenInterceptor,
+    val pinFlowChannel: PinFlowChannel,
+    @ApplicationContext val context: Context
 ) : Authenticator {
 
 
@@ -22,16 +31,34 @@ class SessionAuthenticator @Inject constructor(
         if (response.authRetryCount >= MAX_AUTH_RETRY_COUNT) {
             return null
         }
+        synchronized(this) {
+            response.retryWithLatestTokenIfChanged()?.let { return it }
 
-        response.retryWithLatestTokenIfChanged()?.let { return it }
+            val refreshed = runBlocking {
+                sessionTokenRefresher.get().refreshIfPossible()
+            }
 
-        val refreshed = runBlocking {
-            sessionTokenRefresher.get().refreshIfPossible()
+            if (refreshed !is RefreshedResult.Success) return null
+
+            if (refreshed.requiredPinSet) {
+                if (!pinFlowChannel.hasPendingFlow()) {
+                    val intent = Intent(context, PinActivity::class.java).apply {
+                        putExtra("PIN_STEP", PinStep.PIN_VERIFIED.name )
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+
+                }
+
+                val pinSuccess = runBlocking {
+                    pinFlowChannel.awaitPinResult()
+                }
+
+                if (!pinSuccess) return null
+            }
+
+            return response.request.withLatestAuthorization()
         }
-
-        if (refreshed.not()) return null
-
-        return response.request.withLatestAuthorization()
     }
 
     private fun Response.retryWithLatestTokenIfChanged(): Request? {
@@ -73,5 +100,3 @@ class SessionAuthenticator @Inject constructor(
         private const val MAX_AUTH_RETRY_COUNT = 1
     }
     }
-
-

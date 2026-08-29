@@ -97,12 +97,14 @@ dependencies {
 
     implementation(project(":core"))
     implementation(project(":feature-auth"))
-    implementation(project(":feature-card"))
     implementation(project(":feature-transaction"))
     implementation(project(":feature-transfer"))
     implementation(project(":navigation"))
     implementation(project(":core-ui"))
     implementation(project(":feature-card:data"))
     implementation(project(":feature-card:ui"))
+    implementation(project(":feature-profile:data"))
+    implementation(project(":feature-profile:ui"))
+
 
 }

@@ -3,15 +3,18 @@ package com.example.minibankapp.navigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
+import androidx.navigation.activity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
+import com.example.feature_auth.ui.PinActivity
 import com.example.feature_auth.ui.presentation.AuthRoute
 import com.example.feature_transaction.ui.presentation.TransactionRoute
 import com.example.feature_transfer.ui.presentation.TransferRoute
 import com.example.navigation.DeeplinkNavigator
 import com.example.ui.presentation.CardInfoRoute
+import com.example.ui.presentation.ProfileRoute
 
 @Composable
 fun MainRoutes (
@@ -22,18 +25,17 @@ fun MainRoutes (
         retainedNavigator.navController = navController
     }
 
-    NavHost( navController = navController, startDestination = AppRoutes.UserProfile) {
+    NavHost( navController = navController, startDestination = AppRoutes.UserAuth) {
 
-        composable<AppRoutes.UserAuth>
-        {
-            AuthRoute()
+        activity<AppRoutes.UserAuth> {
+            activityClass = PinActivity::class
         }
 
         composable<AppRoutes.UserProfile>(
             deepLinks = listOf(
                 navDeepLink { uriPattern = DeeplinkNavigator.UserProfile.routeLink })
         ){
-            CardInfoRoute()
+            ProfileRoute()
         }
 
 

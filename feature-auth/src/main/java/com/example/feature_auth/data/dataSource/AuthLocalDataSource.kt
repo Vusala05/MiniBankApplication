@@ -33,7 +33,14 @@ class AuthLocalDataSource @Inject constructor(
     }
 
     suspend fun getRefreshToken(): String {
-        return dataStore.data.map { it[REFRESH_TOKEN] }.first() ?:""
+        return dataStore.data.map { it[REFRESH_TOKEN] }.first() ?: "Test Token"
+    }
+
+    suspend fun savePin(value: String){
+        dataStore.edit { prefs -> prefs[PIN] = value }
+    }
+    suspend fun getPin(): String {
+        return dataStore.data.map { it[PIN] }.first() ?:""
     }
     suspend fun saveUserName(value: String) {
         dataStore.edit { prefs -> prefs[USER_NAME] = value }
@@ -86,6 +93,7 @@ class AuthLocalDataSource @Inject constructor(
     companion object {
         val ACCESS_TOKEN = stringPreferencesKey("ACCESS_TOKEN")
         val REFRESH_TOKEN = stringPreferencesKey("REFRESH_TOKEN")
+        val PIN = stringPreferencesKey("PIN")
         val USER_PROFILE = stringPreferencesKey("USER_PROFILE")
         val USER_NAME = stringPreferencesKey("USER_NAME")
         val SURNAME = stringPreferencesKey("SURNAME")

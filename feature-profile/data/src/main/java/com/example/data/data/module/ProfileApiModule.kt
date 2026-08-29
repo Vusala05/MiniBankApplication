@@ -1,7 +1,7 @@
-package com.example.feature_auth.data.module
+package com.example.data.data.module
 
 import com.example.core.data.module.NetworkModule
-import com.example.feature_auth.data.dataSource.DataSource
+import com.example.data.data.dataSource.DataSource
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -12,11 +12,10 @@ import javax.inject.Singleton
 
 @Module(includes = [NetworkModule::class])
 @InstallIn(SingletonComponent::class)
-object  AuthApiModule {
+object  ProfileApiModule {
     @Provides
     @Singleton
-    fun provideUserAuthDataSource(
-        @Named("Retrofit") retrofit: Retrofit) =
+    fun provideProfileDataSource(
+        @Named("Main-Retrofit") retrofit: Retrofit) =
         retrofit.create(DataSource::class.java)
 }
-

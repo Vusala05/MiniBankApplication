@@ -1,4 +1,4 @@
-package com.example.data.data.module
+package com.example.feature_card.data.module
 
 import com.example.data.domain.repository.UserCardInfoRepository
 import com.example.feature_card.data.repositoryImpl.UserCardInfoRepositoryImpl
