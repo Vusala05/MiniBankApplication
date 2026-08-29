@@ -8,6 +8,7 @@ import com.example.feature_auth.data.dataSource.DataSource
 import com.example.feature_auth.data.request.RefreshTokenRequest.Companion.toEntity
 import com.example.feature_auth.domain.repository.UserAuthRepository
 import com.example.feature_auth.domain.request.RefreshTokenRequestDO
+import com.example.feature_auth.domain.request.RefreshTokenWithPinRequestDO
 import com.example.feature_auth.domain.response.TokenResponseDO
 import javax.inject.Inject
 
@@ -21,5 +22,13 @@ class UserAuthRepositoryImpl @Inject constructor(
      }){ result ->
        result?.toDomain() ?: TokenResponseDO("","",0L, requiresPinSet = false, isPinSet = false)
      }
+    }
+
+    override suspend fun getTokenWithPin(getTokenWithPinRequestDO: RefreshTokenWithPinRequestDO): ResultWrapper<TokenResponseDO> {
+        return handleResultWrapper(result = apiCallingHandler(globalNetwork = globalNetwork){
+            dataSource.refreshTokenWithPin(request = getTokenWithPinRequestDO.toEntity())
+        }){ result ->
+            result?.toDomain() ?: TokenResponseDO("","",0L, requiresPinSet = false, isPinSet = false)
+        }
     }
 }

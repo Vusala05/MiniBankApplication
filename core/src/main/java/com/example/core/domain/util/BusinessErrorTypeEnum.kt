@@ -42,6 +42,32 @@ enum class BusinessErrorTypeEnum(
         errorCode = 1008,
         errorMessage = R.string.error_invalid_profile_request
     ),
+
+    INVALID_PAN_EXCEPTION(
+        errorCode = 1009,
+        errorMessage = R.string.InvalidPanException
+    ),
+
+    PIN_SETUP_REQUIRED_EXCEPTION(
+        errorCode = 1010,
+        errorMessage = R.string.PinSetupRequiredException
+    ),
+
+    INVALID_PIN_EXCEPTION(
+        errorCode = 1011,
+        errorMessage = R.string.InvalidPinException
+    ),
+
+    PIN_REQUIRED_EXCEPTION(
+        errorCode = 1012,
+        errorMessage = R.string.PinRequiredException
+    ),
+
+    TRANSACTION_NOT_FOUND_EXCEPTION(
+        errorCode = 1013,
+        errorMessage = R.string.TransactionNotFoundException
+    ),
+
     UNKNOWN_ERROR(
         errorCode = Integer.MAX_VALUE - 3 ,
         errorMessage = R.string.unknown_error
