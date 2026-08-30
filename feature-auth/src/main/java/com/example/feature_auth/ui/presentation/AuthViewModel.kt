@@ -24,7 +24,6 @@ class AuthViewModel @Inject constructor(
     val getTokenWithPinUseCase: GetTokenWithPinUseCase,
     val pinFlowChannel: PinFlowChannel,
     val tokenInterceptor: TokenInterceptor,
-    val navigator: Navigator
 ) : BaseViewModel<AuthContract.State, AuthContract.Effect>(
     initialState = AuthContract.State(),
     handleErrorUseCase = handleErrorUseCase

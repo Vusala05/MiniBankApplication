@@ -1,3 +1,4 @@
+/*
 package com.example.feature_auth.data.module
 
 import com.example.core.data.interceptor.TokenInterceptor
@@ -49,4 +50,4 @@ object AuthNetworkModule {
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
     }
-}
+}*/
