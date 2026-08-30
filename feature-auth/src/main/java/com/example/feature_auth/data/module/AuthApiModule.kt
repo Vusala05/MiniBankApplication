@@ -16,7 +16,7 @@ object  AuthApiModule {
     @Provides
     @Singleton
     fun provideUserAuthDataSource(
-        @Named("Retrofit") retrofit: Retrofit) =
+        @Named("Main-Retrofit") retrofit: Retrofit) =
         retrofit.create(DataSource::class.java)
 }
 

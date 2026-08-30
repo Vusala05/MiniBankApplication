@@ -38,9 +38,11 @@ class SessionAuthenticator @Inject constructor(
                 sessionTokenRefresher.get().refreshIfPossible()
             }
 
-            if (refreshed !is RefreshedResult.Success) return null
+            if (refreshed is RefreshedResult.Success){
+                return response.request.withLatestAuthorization()
+            }
 
-            if (refreshed.requiredPinSet) {
+
                 if (!pinFlowChannel.hasPendingFlow()) {
                     val intent = Intent(context, PinActivity::class.java).apply {
                         putExtra("PIN_STEP", PinStep.PIN_VERIFIED.name )
@@ -48,9 +50,8 @@ class SessionAuthenticator @Inject constructor(
                     }
                     context.startActivity(intent)
 
-                }
 
-                val pinSuccess = runBlocking {
+                    val pinSuccess = runBlocking {
                     pinFlowChannel.awaitPinResult()
                 }
 
