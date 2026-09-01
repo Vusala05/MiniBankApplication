@@ -1,6 +1,5 @@
 package com.example.feature_auth.ui.presentation
 
-import com.example.feature_auth.ui.util.PinStep
 import com.example.navigation.Route
 
 object AuthContract {
@@ -13,6 +12,7 @@ object AuthContract {
     sealed interface Intent {
         data class OnPinChange(val newPin : String) : Intent
         data object SubmitPin : Intent
+
     }
 
     data class State(
@@ -20,10 +20,9 @@ object AuthContract {
         val verifiedPin : String = "",
         val showPinError : Boolean = false,
         val pinError : String = "",
-        val isLoading : Boolean = false,
-        val pinStep : PinStep = PinStep.PIN_VERIFIED){
+        val isLoading : Boolean = false){
 
-        val currentPin : String
+        /*val currentPin : String
             get() = when(pinStep){
              PinStep.PIN_SETUP -> initialPin
                 PinStep.PIN_VERIFIED -> verifiedPin
@@ -32,9 +31,9 @@ object AuthContract {
 
 
         val currentPinLength : Int
-            get() = currentPin.length
+            get() = currentPin.length*/
     }
-
+  const val IS_FROM_SESSION_AUTH = "isFromSessionAuth"
 
 
 }

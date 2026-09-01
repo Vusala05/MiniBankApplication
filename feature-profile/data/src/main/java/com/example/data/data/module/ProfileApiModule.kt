@@ -1,7 +1,7 @@
 package com.example.data.data.module
 
 import com.example.core.data.module.NetworkModule
-import com.example.data.data.dataSource.DataSource
+import com.example.feature_profile.data.dataSource.DataSource
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

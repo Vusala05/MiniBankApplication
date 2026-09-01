@@ -8,13 +8,14 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
 import androidx.navigation.toRoute
-import com.example.feature_auth.ui.PinActivity
-import com.example.feature_auth.ui.presentation.AuthRoute
+import com.example.feature_auth.ui.presentation.pinSetUp.SetUpPinActivity
+import com.example.feature_auth.ui.presentation.pinVerified.VerifiedPinActivity
 import com.example.feature_transaction.ui.presentation.TransactionRoute
-import com.example.feature_transfer.ui.presentation.TransferRoute
 import com.example.navigation.DeeplinkNavigator
 import com.example.ui.presentation.CardInfoRoute
 import com.example.ui.presentation.ProfileRoute
+import com.example.ui.presentation.TransferRoute
+
 
 @Composable
 fun MainRoutes (
@@ -28,7 +29,7 @@ fun MainRoutes (
     NavHost( navController = navController, startDestination = AppRoutes.UserAuth) {
 
         activity<AppRoutes.UserAuth> {
-            activityClass = PinActivity::class
+            activityClass = VerifiedPinActivity::class
         }
 
         composable<AppRoutes.UserProfile>(

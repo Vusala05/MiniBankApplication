@@ -3,9 +3,17 @@
 
     <application>
         <activity
-            android:name="com.example.feature_auth.ui.PinActivity"
+            android:name="com.example.feature_auth.ui.presentation.pinVerified.VerifiedPinActivity"
             android:exported="false"
             android:launchMode="singleTask" />
+
+        <activity
+            android:name="com.example.feature_auth.ui.presentation.pinSetUp.SetUpPinActivity"
+            android:exported="false"
+            android:launchMode="singleTask" />
+
     </application>
+
+
 
 </manifest>

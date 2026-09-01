@@ -4,12 +4,12 @@ import com.example.core.data.network.apiCallingHandler
 import com.example.core.domain.feature.GlobalNetwork
 import com.example.core.domain.model.ResultWrapper
 import com.example.core.domain.model.handleResultWrapper
-import com.example.data.data.dataSource.DataSource
 import com.example.data.data.repositoryImpl.ProfileRepository
 import com.example.data.data.request.UpdateUserProfileRequest.Companion.toEntity
 import com.example.data.data.response.UserProfile.Companion.toDomain
 import com.example.data.domain.request.UpdateUserProfileRequestDO
 import com.example.data.domain.response.UserProfileDO
+import com.example.feature_profile.data.dataSource.DataSource
 import jakarta.inject.Inject
 
 class ProfileRepositoryImpl @Inject constructor(
