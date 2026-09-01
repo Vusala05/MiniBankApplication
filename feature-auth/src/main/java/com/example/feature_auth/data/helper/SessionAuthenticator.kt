@@ -6,8 +6,8 @@ import com.example.core.data.interceptor.TokenInterceptor
 import com.example.core.domain.feature.PinFlowChannel
 import com.example.core.domain.feature.RefreshedResult
 import com.example.core.domain.feature.SessionTokenRefresher
-import com.example.feature_auth.ui.PinActivity
-import com.example.feature_auth.ui.util.PinStep
+import com.example.feature_auth.ui.presentation.pinVerified.VerifiedPinActivity
+import com.example.feature_auth.ui.presentation.AuthContract.IS_FROM_SESSION_AUTH
 import dagger.Lazy
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.runBlocking
@@ -38,25 +38,23 @@ class SessionAuthenticator @Inject constructor(
                 sessionTokenRefresher.get().refreshIfPossible()
             }
 
-            if (refreshed is RefreshedResult.Success){
+            if (refreshed is RefreshedResult.Success) {
                 return response.request.withLatestAuthorization()
             }
 
-
-                if (!pinFlowChannel.hasPendingFlow()) {
-                    val intent = Intent(context, PinActivity::class.java).apply {
-                        putExtra("PIN_STEP", PinStep.PIN_VERIFIED.name )
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    }
-                    context.startActivity(intent)
-
-
-                    val pinSuccess = runBlocking {
-                    pinFlowChannel.awaitPinResult()
-                }
-
-                if (!pinSuccess) return null
+            val intent = Intent(context, VerifiedPinActivity::class.java).apply {
+                putExtra(IS_FROM_SESSION_AUTH, true )
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             }
+            context.startActivity(intent)
+
+
+            val pinSuccess = runBlocking {
+                pinFlowChannel.awaitPinResult()
+            }
+
+            if (!pinSuccess) return null
+
 
             return response.request.withLatestAuthorization()
         }
@@ -100,4 +98,4 @@ class SessionAuthenticator @Inject constructor(
         private const val AUTHORIZATION = "Authorization"
         private const val MAX_AUTH_RETRY_COUNT = 1
     }
-    }
+}

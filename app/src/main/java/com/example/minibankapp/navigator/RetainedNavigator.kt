@@ -7,8 +7,9 @@ import com.example.navigation.Navigator
 import com.example.navigation.Route
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 
-@ActivityRetainedScoped
+@Singleton
 class RetainedNavigator @Inject constructor() : Navigator  {
 
     var navController : NavController?=null

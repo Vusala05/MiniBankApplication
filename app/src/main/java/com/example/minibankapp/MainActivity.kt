@@ -22,6 +22,9 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
+    init {
+        Log.e("MAINACTIVITY","MainActivity is initialized")
+    }
     @Inject
     lateinit var apiErrorHandler : ApiErrorHandler
     @Inject
@@ -45,18 +48,8 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     retainedNavigator = retainedNavigator
                 )
-                Log.e("inside init", "inside init")
 
-                lifecycleScope.launch {
-                    val success = pinFlowChannel.awaitPinResult()
-                    if (success) {
-                        retainedNavigator.navigate(
-                            Route.NavigateDeeplinkRoute(DeeplinkNavigator.UserProfile)
-                        )
-                    } else {
-                        // pin ləğv olundu / uğursuz — istəsən app-ı bağla və ya login-ə yönləndir
-                    }
-                }
+
 
             }
         }

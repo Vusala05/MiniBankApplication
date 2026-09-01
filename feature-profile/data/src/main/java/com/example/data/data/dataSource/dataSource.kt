@@ -1,4 +1,4 @@
-package com.example.data.data.dataSource
+package com.example.feature_profile.data.dataSource
 
 import com.example.core.data.model.BaseResponse
 import com.example.data.data.request.UpdateUserProfileRequest

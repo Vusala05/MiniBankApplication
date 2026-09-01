@@ -31,47 +31,47 @@ validate_mr_target:
       echo "Source branch: $SOURCE (prefix: $SOURCE_PREFIX)"
       echo "Target branch: $TARGET (prefix: $TARGET_PREFIX)"
 
-      is_allowed=1
+      is_allowed=0
 
       # Universal rule: only release/* can target master, regardless of source
       if [ "$TARGET" == "master" ] || [ "$TARGET" == "main" ]; then
         if [ "$SOURCE_PREFIX" == "release" ]; then
-          is_allowed=0
-        else
           is_allowed=1
+        else
+          is_allowed=0
         fi
       else
         case "$SOURCE_PREFIX" in
           feature)
             case "$TARGET_PREFIX" in
-              epic|release) is_allowed=0 ;;
+              epic|release) is_allowed=1 ;;
             esac
             ;;
           tech)
             case "$TARGET_PREFIX" in
               epic|release)
-                is_allowed=0
+                is_allowed=1
                 ;;
               tech|feature)
                 echo "WARNING: MR from 'tech/*' to '$TARGET_PREFIX/*' is a special-case flow (e.g. version bump by CL)."
                 echo "WARNING: This is normally disallowed — please make sure this MR is reviewed and approved carefully."
-                is_allowed=0
+                is_allowed=1
                 ;;
             esac
             ;;
           dev)
             case "$TARGET_PREFIX" in
-              feature|tech) is_allowed=0 ;;
+              feature|tech) is_allowed=1 ;;
             esac
             ;;
           bugfix)
             case "$TARGET_PREFIX" in
-              feature|tech|epic|release) is_allowed=0 ;;
+              feature|tech|epic|release) is_allowed=1 ;;
             esac
             ;;
           merge)
             case "$TARGET_PREFIX" in
-              feature|tech|epic|release) is_allowed=0 ;;
+              feature|tech|epic|release) is_allowed=1 ;;
             esac
             ;;
           *)
@@ -80,7 +80,7 @@ validate_mr_target:
         esac
       fi
 
-      if [ "$is_allowed" -ne 0 ]; then
+      if [ "$is_allowed" -eq 0 ]; then
         echo "ERROR: MR from '$SOURCE' (prefix: $SOURCE_PREFIX) to '$TARGET' (prefix: $TARGET_PREFIX) is NOT allowed."
         echo ""
         echo "Allowed MR target rules:"
@@ -153,7 +153,7 @@ validate_tag:
       ALLOWED_FOUND=0
       while IFS= read -r branch; do
         PREFIX="${branch%%/*}"
-        if [ "$PREFIX" == "feature" ] || [ "$PREFIX" == "epic" ] || [ "$PREFIX" == "release" ]; then
+        if [ "$PREFIX" == "feature" ] || [ "$PREFIX" == "epic" ] || [ "$PREFIX" == "release" ] || [ "$branch" == "master" ] || [ "$branch" == "main" ]; then
           ALLOWED_FOUND=1
           echo "Valid source branch found: $branch"
         fi

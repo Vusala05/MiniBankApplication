@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 class ProfileViewModel @Inject constructor(
     val updateUserProfileUseCase: UpdateUserProfileUseCase,
     val getProfileUseCase: GetUserProfileUseCase,
-    //val authLocalDataSource: AuthLocalDataSource,
+    //val authLocalDataStore: AuthLocalDataStore,
     val handleErrorUseCase: HandleErrorUseCase,
     val navigator: Navigator
 ) : BaseViewModel<ProfileContract.State, ProfileContract.Effect>(ProfileContract.State(), handleErrorUseCase) {
@@ -55,10 +55,10 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             when(val res = getProfileUseCase()){
                 is ResultWrapper.Success -> {
-                    /*authLocalDataSource.saveUserName(res.data.firstName)
-                    authLocalDataSource.saveSurname(res.data.lastName)
-                    authLocalDataSource.savePhone(res.data.phoneNumber)
-                    authLocalDataSource.saveEmail(res.data.email)*/
+                    /*authLocalDataStore.saveUserName(res.data.firstName)
+                    authLocalDataStore.saveSurname(res.data.lastName)
+                    authLocalDataStore.savePhone(res.data.phoneNumber)
+                    authLocalDataStore.saveEmail(res.data.email)*/
                     updateState { it.copy(
                         loading = false ,
                         name = res.data.firstName,

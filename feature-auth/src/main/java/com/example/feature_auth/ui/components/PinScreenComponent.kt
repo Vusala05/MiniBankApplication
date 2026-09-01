@@ -41,9 +41,10 @@ fun PinScreenComponent(
     pinStepTitle: String,
     pinStepDescription: String,
     pinError: String,
-    state: AuthContract.State,
+    showPinError : Boolean,
+    currentPin : String,
     onPinChange: (String) -> Unit,
-    onContinueClick: () -> Unit, // Klik Hadisəsi əlavə olundu
+    onContinueClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -83,7 +84,7 @@ fun PinScreenComponent(
         Spacer(modifier = Modifier.height(32.dp))
 
         BasicTextField(
-            value = state.currentPin,
+            value = currentPin,
             onValueChange = onPinChange,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
             modifier = Modifier
@@ -101,13 +102,13 @@ fun PinScreenComponent(
                 },
             contentAlignment = Alignment.Center
         ) {
-            PinCircles(filledCount = state.currentPinLength)
+            PinCircles(filledCount = currentPin.length)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
         AnimatedVisibility(
-            visible = state.showPinError,
+            visible = showPinError,
             enter = fadeIn() + slideInVertically(initialOffsetY = { -20 }),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { -20 })
         ) {

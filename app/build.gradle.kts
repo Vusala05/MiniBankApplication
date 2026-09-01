@@ -97,8 +97,10 @@ dependencies {
 
     implementation(project(":core"))
     implementation(project(":feature-auth"))
-    implementation(project(":feature-transaction"))
-    implementation(project(":feature-transfer"))
+    implementation(project(":feature-transaction:data"))
+    implementation(project(":feature-transaction:ui"))
+    implementation(project(":feature-transfer:data"))
+    implementation(project(":feature-transfer:ui"))
     implementation(project(":navigation"))
     implementation(project(":core-ui"))
     implementation(project(":feature-card:data"))
