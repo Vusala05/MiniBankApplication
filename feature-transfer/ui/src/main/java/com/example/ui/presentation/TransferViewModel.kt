@@ -34,14 +34,12 @@ class TransferViewModel @Inject constructor(
     init {
         handleCalculateCommission()
     }
-    private val amountFlow = MutableStateFlow("")
 
 
     fun handleIntent(intent: TransferContract.Intent) {
         when (intent) {
             is TransferContract.Intent.AmountChange -> {
                 updateState { it.copy(amount = intent.amount) }
-                amountFlow.value = intent.amount
             }
 
             is TransferContract.Intent.SourceCardChange -> {
@@ -65,11 +63,6 @@ class TransferViewModel @Inject constructor(
                         errorCode = null
                     )
                 }
-
-            }
-
-            is TransferContract.Intent.CurrencyChange -> {
-                updateState { it.copy(currency = intent.currency) }
 
             }
 
@@ -109,7 +102,11 @@ class TransferViewModel @Inject constructor(
             }
 
             is TransferContract.Intent.GetTransferType -> {
-                   updateState { it.copy(transferType = intent.transferType)}
+                   updateState { it.copy(transferType = intent.transferType, amount = "",
+                       destinationPan = null,
+                       destinationCard = null,
+                       sourceCard = null,
+                       commissionPreviewResponse = null)}
             }
 
             is TransferContract.Intent.GetCallBackUrlParams -> {
@@ -129,21 +126,32 @@ class TransferViewModel @Inject constructor(
 
     }
 
-    private fun handleCalculateCommission(){
+
+    private fun handleCalculateCommission() {
         viewModelScope.launch {
             state.distinctUntilChanged { old, new ->
-                val amount = old.amount == new.amount
-                val sourceCardId = old.sourceCard == new.sourceCard
-                val destinationCard = old.destinationCard == new.destinationCard
-                amount && sourceCardId && destinationCard
+                val amountSame = old.amount == new.amount
+                val sourceCardSame = old.sourceCard == new.sourceCard
+               val transferTypeSame = old.transferType == new.transferType
+
+                val destinationSame = when (new.transferType) {
+                    TransferType.BETWEEN_OWN_CARD -> old.destinationCard == new.destinationCard
+                    TransferType.BETWEEN_OTHER_CARD -> old.destinationPan == new.destinationPan
+                }
+
+                amountSame && sourceCardSame  && transferTypeSame && destinationSame
             }.debounce(300)
                 .collectLatest {
-                    if(it.amount.isNotBlank() && it.destinationCard!=null && it.sourceCard!=null){
+                    val destinationValid = when (it.transferType) {
+                        TransferType.BETWEEN_OWN_CARD -> it.destinationCard != null
+                        TransferType.BETWEEN_OTHER_CARD -> !it.destinationPan.isNullOrBlank() && it.destinationPan.length==16
+                    }
+
+                    if (it.amount.isNotBlank() && it.sourceCard != null && destinationValid) {
                         calculateCommission(it.amount)
                     }
                 }
         }
-
     }
 
     private fun calculateCommission(amount: String) {

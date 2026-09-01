@@ -17,7 +17,6 @@ object TransferContract {
         data class SourceCardChange(val sourceCard : CardDO) : Intent
         data class DestinationCardChange(val destinationCard : CardDO) : Intent
         data class AmountChange(val amount : String) : Intent
-        data class CurrencyChange(val currency : String) : Intent
         data object OnSubmitClick : Intent
         data class OnNavigateScreen ( val route: Route ) : Intent
         data class SelectCard (val card : CardDO) : Intent
