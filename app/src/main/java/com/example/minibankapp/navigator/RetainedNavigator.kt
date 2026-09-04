@@ -7,8 +7,9 @@ import com.example.navigation.Navigator
 import com.example.navigation.Route
 import dagger.hilt.android.scopes.ActivityRetainedScoped
 import jakarta.inject.Inject
+import jakarta.inject.Singleton
 
-@ActivityRetainedScoped
+@Singleton
 class RetainedNavigator @Inject constructor() : Navigator  {
 
     var navController : NavController?=null
@@ -23,9 +24,10 @@ class RetainedNavigator @Inject constructor() : Navigator  {
 
     fun navigateWithDeepLink( deepLinkNav : DeeplinkNavigator){
         when(deepLinkNav) {
-            is DeeplinkNavigator.Transfer,
-            is DeeplinkNavigator.Transaction,
-            is DeeplinkNavigator.CardsInfo -> {
+            is DeeplinkNavigator.Transaction -> {
+                navController?.navigate((deepLinkNav.routeLink + deepLinkNav.argument).toUri())
+            }
+            else -> {
                 navController?.navigate(deepLinkNav.routeLink.toUri())
             }
         }

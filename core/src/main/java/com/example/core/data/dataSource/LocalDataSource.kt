@@ -6,18 +6,32 @@ import javax.inject.Inject
 
 class LocalDataSource @Inject constructor(val dao: CacheDao) : CacheManager {
 
-    override suspend fun writeData(key: String, groupKey : String, value: String, expirationTime: Long) {
-        dao.insertData(CacheEntity(key, groupKey, value , expirationTime, addedAtTime = System.currentTimeMillis()))
+    override suspend fun writeData(
+        key: String,
+        groupKey: String,
+        value: String,
+        expirationTime: Long
+    ) {
+        dao.insertData(
+            CacheEntity(
+                key,
+                groupKey,
+                value,
+                expirationTime,
+                addedAtTime = System.currentTimeMillis()
+            )
+        )
     }
 
     override suspend fun getData(key: String): String? {
         val dataEntity = dao.getData(key) ?: return null
-                val timeIsNotValid = dataEntity.expirationTime <= System.currentTimeMillis() - dataEntity.addedAtTime
-                if(timeIsNotValid){
-                    dao.removeData(key)
-                    return null
-                }
-                return dataEntity.value
+        val groupKey = dataEntity.groupKey
+        val timeIsNotValid = dataEntity.expirationTime <= System.currentTimeMillis() - dataEntity.addedAtTime
+        if (timeIsNotValid) {
+            dao.removeDataGroup(groupKey)
+            return null
+        }
+        return dataEntity.value
 
     }
 

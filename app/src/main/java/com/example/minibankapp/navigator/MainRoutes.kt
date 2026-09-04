@@ -3,14 +3,19 @@ package com.example.minibankapp.navigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavHostController
+import androidx.navigation.activity
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navDeepLink
-import com.example.feature_auth.ui.presentation.AuthRoute
+import androidx.navigation.toRoute
+import com.example.feature_auth.ui.presentation.pinSetUp.SetUpPinActivity
+import com.example.feature_auth.ui.presentation.pinVerified.VerifiedPinActivity
 import com.example.feature_transaction.ui.presentation.TransactionRoute
-import com.example.feature_transfer.ui.presentation.TransferRoute
 import com.example.navigation.DeeplinkNavigator
 import com.example.ui.presentation.CardInfoRoute
+import com.example.ui.presentation.ProfileRoute
+import com.example.ui.presentation.TransferRoute
+
 
 @Composable
 fun MainRoutes (
@@ -21,11 +26,17 @@ fun MainRoutes (
         retainedNavigator.navController = navController
     }
 
-    NavHost( navController = navController, startDestination = AppRoutes.UserInfo) {
+    NavHost( navController = navController, startDestination = AppRoutes.UserAuth) {
 
-        composable<AppRoutes.UserInfo>
-        {
-            AuthRoute()
+        activity<AppRoutes.UserAuth> {
+            activityClass = VerifiedPinActivity::class
+        }
+
+        composable<AppRoutes.UserProfile>(
+            deepLinks = listOf(
+                navDeepLink { uriPattern = DeeplinkNavigator.UserProfile.routeLink })
+        ){
+            ProfileRoute()
         }
 
 
@@ -38,9 +49,10 @@ fun MainRoutes (
 
         composable<AppRoutes.Transactions>(
             deepLinks = listOf(
-                navDeepLink { uriPattern = DeeplinkNavigator.Transaction.routeLink })
-        ){
-            TransactionRoute()
+                navDeepLink { uriPattern = "${DeeplinkNavigator.TRANSACTIONS_URL}{cardId}" })
+        ){ navStackEntry ->
+            val args = navStackEntry.toRoute<AppRoutes.Transactions>()
+            TransactionRoute(cardId = args.cardId)
         }
 
         composable<AppRoutes.Transfer>(

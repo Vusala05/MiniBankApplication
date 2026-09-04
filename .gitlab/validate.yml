@@ -1,0 +1,170 @@
+validate_branch_name:
+  stage: validate
+  image: alpine:latest
+  tags:
+    - mac
+  before_script: []
+  script:
+    - |
+      if echo "$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME" | grep -Eq '^(dev|feature|tech|epic|release|bugfix|merge)/.+'; then
+        echo "The name of branch is correct: $CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
+      else
+        echo "ERROR: The name format is incorrect: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME'"
+        echo "Allowed formats: dev/*, feature/*, tech/*, epic/*, release/*, bugfix/*, merge/*"
+        exit 1
+      fi
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+validate_mr_target:
+  stage: validate
+  image: alpine:latest
+  tags:
+    - mac
+  before_script: []
+  script:
+    - |
+      SOURCE="$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME"
+      TARGET="$CI_MERGE_REQUEST_TARGET_BRANCH_NAME"
+      SOURCE_PREFIX="${SOURCE%%/*}"
+      TARGET_PREFIX="${TARGET%%/*}"
+
+      echo "Source branch: $SOURCE (prefix: $SOURCE_PREFIX)"
+      echo "Target branch: $TARGET (prefix: $TARGET_PREFIX)"
+
+      is_allowed=0
+
+      # Universal rule: only release/* can target master, regardless of source
+      if [ "$TARGET" == "master" ] || [ "$TARGET" == "main" ]; then
+        if [ "$SOURCE_PREFIX" == "release" ]; then
+          is_allowed=1
+        else
+          is_allowed=0
+        fi
+      else
+        case "$SOURCE_PREFIX" in
+          feature)
+            case "$TARGET_PREFIX" in
+              epic|release) is_allowed=1 ;;
+            esac
+            ;;
+          tech)
+            case "$TARGET_PREFIX" in
+              epic|release)
+                is_allowed=1
+                ;;
+              tech|feature)
+                echo "WARNING: MR from 'tech/*' to '$TARGET_PREFIX/*' is a special-case flow (e.g. version bump by CL)."
+                echo "WARNING: This is normally disallowed — please make sure this MR is reviewed and approved carefully."
+                is_allowed=1
+                ;;
+            esac
+            ;;
+          dev)
+            case "$TARGET_PREFIX" in
+              feature|tech) is_allowed=1 ;;
+            esac
+            ;;
+          bugfix)
+            case "$TARGET_PREFIX" in
+              feature|tech|epic|release) is_allowed=1 ;;
+            esac
+            ;;
+          merge)
+            case "$TARGET_PREFIX" in
+              feature|tech|epic|release) is_allowed=1 ;;
+            esac
+            ;;
+          *)
+            echo "WARNING: No rule defined for source prefix '$SOURCE_PREFIX'. Please review branching rules."
+            ;;
+        esac
+      fi
+
+      if [ "$is_allowed" -eq 0 ]; then
+        echo "ERROR: MR from '$SOURCE' (prefix: $SOURCE_PREFIX) to '$TARGET' (prefix: $TARGET_PREFIX) is NOT allowed."
+        echo ""
+        echo "Allowed MR target rules:"
+        echo "  feature/* -> epic/*, release/*"
+        echo "  tech/*    -> epic/*, release/* (tech/*, feature/* allowed with warning)"
+        echo "  dev/*     -> feature/*, tech/*"
+        echo "  bugfix/*  -> feature/*, tech/*, epic/*, release/*"
+        echo "  merge/*   -> feature/*, tech/*, epic/*, release/*"
+        echo "  master    -> only from release/*"
+        exit 1
+      fi
+
+      echo "MR target is valid: $SOURCE -> $TARGET"
+       # ------ Key matching check 
+      if [ "$TARGET_PREFIX" == "feature" ] || [ "$TARGET_PREFIX" == "tech" ] || [ "$TARGET_PREFIX" == "epic" ]; then
+        SOURCE_REST="${SOURCE#*/}"
+        TARGET_REST="${TARGET#*/}"
+        SOURCE_KEY="${SOURCE_REST%%-*}"
+        TARGET_KEY="${TARGET_REST%%-*}"
+
+        echo "Source feature key: $SOURCE_KEY"
+        echo "Target feature key: $TARGET_KEY"
+
+        if [ "$SOURCE_KEY" != "$TARGET_KEY" ]; then
+          echo "ERROR: Feature key mismatch!"
+          echo "Source '$SOURCE' belongs to feature '$SOURCE_KEY'"
+          echo "Target '$TARGET' belongs to feature '$TARGET_KEY'"
+          echo "You seem to be merging into an unrelated branch."
+          exit 1
+        fi
+
+        echo "Feature key match: $SOURCE_KEY"
+      else
+        echo "Feature key check skipped (target is '$TARGET_PREFIX/*', not feature/tech/epic)."
+      fi
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
+
+validate_tag:
+  stage: validate
+  image: alpine:latest
+  tags:
+    - mac
+  before_script:
+    - git --version
+  script:
+    - |
+      if echo "$CI_COMMIT_TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+        echo "Tag is valid (Release Candidate format): $CI_COMMIT_TAG"
+      elif echo "$CI_COMMIT_TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+        echo "Tag is valid (Final Release format): $CI_COMMIT_TAG"
+      else
+        echo "Error: Tag format is not valid: '$CI_COMMIT_TAG'"
+        echo "Correct formats: v1.0.0 (release candidate) or v1.0.0.1 (final release)"
+        exit 1
+      fi
+
+      # --- Tag source branch check ---
+      # Tags may only be created from feature/*, epic/*, or release/* branches.
+      # Fetch full branch info so we can check which branches contain this commit.
+      git fetch origin --prune 2>/dev/null || true
+      git fetch "$CI_REPOSITORY_URL" '+refs/heads/*:refs/remotes/origin/*' 2>/dev/null || true
+
+      CONTAINING_BRANCHES=$(git branch -r --points-at "$CI_COMMIT_SHA" 2>/dev/null | sed 's/origin\///' | sed 's/^[* ]*//')
+
+      echo "Branches containing this commit:"
+      echo "$CONTAINING_BRANCHES"
+
+      ALLOWED_FOUND=0
+      while IFS= read -r branch; do
+        PREFIX="${branch%%/*}"
+        if [ "$PREFIX" == "feature" ] || [ "$PREFIX" == "epic" ] || [ "$PREFIX" == "release" ] || [ "$branch" == "master" ] || [ "$branch" == "main" ]; then
+          ALLOWED_FOUND=1
+          echo "Valid source branch found: $branch"
+        fi
+      done <<< "$CONTAINING_BRANCHES"
+
+      if [ "$ALLOWED_FOUND" -eq 0 ]; then
+        echo "ERROR: Tag '$CI_COMMIT_TAG' can not be created form this branch."
+        echo "Tags may only be created from feature/*, epic/*, or release/* branches."
+        exit 1
+      fi
+
+      echo "Tag source validation passed."
+  rules:
+    - if: '$CI_COMMIT_TAG'

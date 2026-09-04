@@ -1,20 +1,18 @@
 package com.example.core.data.module
 
 import com.example.core.data.interceptor.TokenInterceptor
-import com.example.core.data.network.SessionAuthenticator
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
-import okhttp3.Interceptor
+import okhttp3.Authenticator
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
-import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -23,46 +21,44 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideHttpLogInterceptor() : HttpLoggingInterceptor {
+    @Named("Main-interceptor")
+    fun provideHttpLogInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY
-
         }
     }
 
     @Provides
     @Singleton
+    @Named("Main-Client")
     fun provideOkHttpClient(
-        loggingInterceptor: HttpLoggingInterceptor,
-        sessionAuthenticator: SessionAuthenticator,
-        tokenInterceptor: TokenInterceptor) : OkHttpClient{
+        @Named("Main-interceptor") loggingInterceptor: HttpLoggingInterceptor,
+        tokenInterceptor: TokenInterceptor,
+        authenticator: Authenticator
+    ): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .addInterceptor(tokenInterceptor)
-            .authenticator(sessionAuthenticator)
+            .authenticator(authenticator)
             .build()
-
     }
-    @Module
-    @InstallIn(SingletonComponent::class)
-    object SerializationModule {
-
-        @Provides
-        @Singleton
-        fun provideJson(): Json {
-            return Json {
-                ignoreUnknownKeys = true
-                isLenient = true
-
-            }
-        }
-    }
-
-
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient,json: Json) : Retrofit{
+    fun provideJson(): Json {
+        return Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
+    }
+
+    @Provides
+    @Singleton
+    @Named("Main-Retrofit")
+    fun provideRetrofit(
+        @Named("Main-Client") okHttpClient: OkHttpClient,
+        json: Json
+    ): Retrofit {
         val contentType = "application/json".toMediaType()
 
         return Retrofit.Builder()
@@ -71,7 +67,4 @@ object NetworkModule {
             .addConverterFactory(json.asConverterFactory(contentType))
             .build()
     }
-
-
-
 }

@@ -8,11 +8,14 @@ sealed interface AppRoutes {
     data object CardInfo : AppRoutes
 
     @Serializable
-    data object Transactions : AppRoutes
+    data class Transactions(val cardId : String?=null) : AppRoutes
 
     @Serializable
     data object Transfer : AppRoutes
 
     @Serializable
-    data object UserInfo : AppRoutes
+    data object UserProfile : AppRoutes
+
+    @Serializable
+    data object UserAuth : AppRoutes
 }

@@ -44,7 +44,7 @@ fun CardInfoScreen(
                     fontSize = 15.sp,
                     modifier = Modifier.clickable{
                         handleIntent(CardInfoContract.Intent.OnNavigateBalanceTransfer(Route.NavigateDeeplinkRoute(
-                            DeeplinkNavigator.Transaction)))
+                            DeeplinkNavigator.Transaction(argument = null))))
                     }
 
                 )
@@ -60,7 +60,11 @@ fun CardInfoScreen(
             items(state.cardWithBalanceList){ item ->
                 BankCardItem(
                     card = item.cardDO,
-                    isLoading = state.isCardSectionLoading
+                    isLoading = state.isCardSectionLoading,
+                    onClick = {
+                        handleIntent(CardInfoContract.Intent.OnNavigateTransaction(Route.NavigateDeeplinkRoute(
+                            DeeplinkNavigator.Transaction(argument = it ))))
+                    }
                 )
                 BalanceSection(
                    balanceUiState = item.balanceUiState

@@ -7,6 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module(includes = [NetworkModule::class])
@@ -14,7 +15,8 @@ import javax.inject.Singleton
 object  AuthApiModule {
     @Provides
     @Singleton
-    fun provideUserAuthDataSource( retrofit: Retrofit) =
+    fun provideUserAuthDataSource(
+        @Named("Main-Retrofit") retrofit: Retrofit) =
         retrofit.create(DataSource::class.java)
 }
 

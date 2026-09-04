@@ -1,40 +1,39 @@
 package com.example.feature_auth.ui.presentation
 
-import com.example.feature_auth.domain.response.UserProfileDO
 import com.example.navigation.Route
 
 object AuthContract {
 
-    sealed interface Intent{
-        data class SetName (val name : String) : Intent
-        data class SetSurname (val surname : String) : Intent
-        data class SetEmail (val email : String) : Intent
-        data class SetPhone (val phone : String) : Intent
-        data object OnSaveClick : Intent
-        data class OnNextClick (val route : Route)  : Intent
+    sealed interface Effect {
+        data class ShowMessage(val message : Int) : Effect
+        data object PinFlowCompleted : Effect
+    }
+
+    sealed interface Intent {
+        data class OnPinChange(val newPin : String) : Intent
+        data object SubmitPin : Intent
 
     }
 
-    sealed interface Effect{
-        data class ShowErrorMessage(val message : Int) : Effect
+    data class State(
+        val initialPin : String = "",
+        val verifiedPin : String = "",
+        val showPinError : Boolean = false,
+        val pinError : String = "",
+        val isLoading : Boolean = false){
+
+        /*val currentPin : String
+            get() = when(pinStep){
+             PinStep.PIN_SETUP -> initialPin
+                PinStep.PIN_VERIFIED -> verifiedPin
+                PinStep.SUCCESS -> ""
+            }
+
+
+        val currentPinLength : Int
+            get() = currentPin.length*/
     }
+  const val IS_FROM_SESSION_AUTH = "isFromSessionAuth"
 
-    data class State (
-        val loading : Boolean = false,
-        val name : String = " ",
-        val surname : String = " ",
-        val email : String = " ",
-        val phone : String = " ",
-        val userProfile : UserProfileDO = UserProfileDO("","","","","","")
-    ){
-        val  hasUnsavedChanges : Boolean
-            get() = userProfile.firstName != name ||
-                    userProfile.lastName != surname ||
-                    userProfile.email != email ||
-                    userProfile.phoneNumber != phone
-
-        val buttonEnable = hasUnsavedChanges || !loading
-
-        }
 
 }
